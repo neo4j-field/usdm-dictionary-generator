@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xmi:XMI xmi:version="2.1" xmlns:uml="http://schema.omg.org/spec/UML/2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1">
+    <xmi:Documentation exporter="Enterprise Architect" exporterVersion="6.5" exporterID="1559"/>
+    <uml:Model xmi:type="uml:Model" name="EA_Model" visibility="public">
+    <packagedElement xmi:type="uml:Package" xmi:id="EAPK_9C98E96A_ACD6_447d_A5F8_0B40273B57FF" name="Model" visibility="public">
+    </packagedElement>
+        <packagedElement xmi:type="uml:Class" xmi:id="EAID_D160D5CE_CD2C_48b9_8F14_072AFD3AE3AA" name="Activity" visibility="public">
+        </packagedElement>
+    </uml:Model>
+</xmi:XMI>
+
+<!--<students>-->
+<!--    <student id="10">-->
+<!--        <age>33</age>-->
+<!--        <name>Tina</name>-->
+<!--    </student>-->
+<!--    <student id="11">-->
+<!--        <age>32</age>-->
+<!--        <name>Chachi</name>-->
+<!--    </student>-->
+<!--</students>-->
+
+<!--        <?xml version="1.0"?>-->
+<!--<tutorials>-->
+<!--<tutorial tutId="01" type="java">-->
+<!--    <title>Guava</title>-->
+<!--    <description>Introduction to Guava</description>-->
+<!--    <date>04/04/2016</date>-->
+<!--    <author>GuavaAuthor</author>-->
+<!--</tutorial>-->
+<!--...-->
+<!--</tutorials>-->
