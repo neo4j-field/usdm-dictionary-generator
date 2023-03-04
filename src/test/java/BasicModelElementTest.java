@@ -121,12 +121,26 @@ public class BasicModelElementTest {
         Object result = expr.evaluate(document, XPathConstants.NODESET);
         NodeList nodes = (NodeList) result;
         assertNotEquals(0, nodes.getLength());
-        logger.log(Level.INFO, "Total Classes Found: " + nodes.getLength());
+        logger.log(Level.FINE, "Total Classes Found: " + nodes.getLength());
         for (int i = 0; i < nodes.getLength(); i++) {
             Node currentItem = nodes.item(i);
             List<ModelClassProperty> properties = new ArrayList<>();
-            classes.add(new ModelClass(currentItem.getAttributes().getNamedItem("name").getNodeValue(), null, properties));
+            String className = currentItem.getAttributes().getNamedItem("name").getNodeValue();
+            classes.add(new ModelClass(className, null, properties));
+            ////xmi:XMI/uml:Model//packagedElement[@name='Activity']/ownedAttribute[@xmi:type='uml:Property']
+            String propertyExprStr = String.format("//xmi:XMI/uml:Model//packagedElement[@name='%1$s']/" +
+                    "ownedAttribute[@xmi:type='uml:Property']", className);
+            logger.log(Level.FINE, propertyExprStr);
+            XPathExpression propertyExpr = xpath.compile(propertyExprStr);
+            Object propsResult = propertyExpr.evaluate(document, XPathConstants.NODESET);
+            NodeList propsNodes = (NodeList) propsResult;
+            logger.log(Level.FINE, "Total Properties Found: " + propsNodes.getLength());
+            for (int j = 0; j < propsNodes.getLength(); j++) {
+                Node currentProp = propsNodes.item(j);
+                String propName = currentProp.getAttributes().getNamedItem("name").getNodeValue();
+                properties.add(new ModelClassProperty(propName, null, null));
+            }
         }
-        logger.log(Level.INFO, classes.toString());
+        logger.log(Level.INFO, "Deserialized Result: " + classes.toString());
     }
 }

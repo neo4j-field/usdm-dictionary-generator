@@ -1,9 +1,11 @@
 package org.cdisc.tools;
 
+import lombok.Getter;
+
 import java.util.Collection;
 
 public class ModelClass extends Descriptor {
-
+    @Getter
     private final Collection<ModelClassProperty> properties;
 
     public ModelClass(String name, String description, Collection<ModelClassProperty> properties) {
@@ -11,11 +13,8 @@ public class ModelClass extends Descriptor {
         this.properties = properties;
     }
 
-    // TODO - Produce JSON
     @Override
     public String toString() {
-        return "ModelClass{" +
-                "properties=" + properties +
-                '}';
+        return String.format("'%1$s': 'properties': { %2$s }", this.getName(), this.getProperties());
     }
 }
