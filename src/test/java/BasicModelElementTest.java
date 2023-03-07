@@ -126,7 +126,7 @@ public class BasicModelElementTest {
             Node currentItem = nodes.item(i);
             List<ModelClassProperty> properties = new ArrayList<>();
             String className = currentItem.getAttributes().getNamedItem("name").getNodeValue();
-            classes.add(new ModelClass(className, null, properties));
+            classes.add(new ModelClass(className, properties));
             ////xmi:XMI/uml:Model//packagedElement[@name='Activity']/ownedAttribute[@xmi:type='uml:Property']
             String propertyExprStr = String.format("//xmi:XMI/uml:Model//packagedElement[@name='%1$s']/" +
                     "ownedAttribute[@xmi:type='uml:Property']", className);
@@ -138,9 +138,9 @@ public class BasicModelElementTest {
             for (int j = 0; j < propsNodes.getLength(); j++) {
                 Node currentProp = propsNodes.item(j);
                 String propName = currentProp.getAttributes().getNamedItem("name").getNodeValue();
-                properties.add(new ModelClassProperty(propName, null, null));
+                properties.add(new ModelClassProperty(propName, null));
             }
         }
-        logger.log(Level.INFO, "Deserialized Result: " + classes.toString());
+        logger.log(Level.INFO, "JSON Result: " + classes.toString());
     }
 }
