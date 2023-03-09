@@ -12,7 +12,8 @@ public class UsdmJsonSerializer implements JsonSerializer<ModelClass> {
     @Override
     public JsonElement serialize(ModelClass modelClass, Type type, JsonSerializationContext jsonSerializationContext) {
         JsonObject jsonObject = new JsonObject();
-        jsonObject.add("className", jsonSerializationContext.serialize(modelClass.getClassName()));
+        jsonObject.add("className", jsonSerializationContext.serialize(modelClass.getName()));
+        jsonObject.add("classDescription", jsonSerializationContext.serialize(modelClass.getDescription()));
         jsonObject.add("properties", jsonSerializationContext.serialize(modelClass.getProperties()));
         return jsonObject;
     }

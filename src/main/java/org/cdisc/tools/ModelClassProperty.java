@@ -1,22 +1,15 @@
 package org.cdisc.tools;
 
-import com.google.gson.Gson;
 import lombok.Getter;
 import lombok.Setter;
 
-public class ModelClassProperty {
-    @Getter @Setter
+public class ModelClassProperty extends Descriptor {
+    @Getter
+    @Setter
     private String type;
-    @Getter @Setter
-    private String propertyName;
 
-    public ModelClassProperty(String name, String type) {
+    public ModelClassProperty(String name, String type, String description) {
+        super(name, description);
         this.type = type;
-        this.propertyName = name;
     }
-
-//    @Override
-//    public String toString() {
-//        return new Gson().toJson(this);
-//    }
 }
