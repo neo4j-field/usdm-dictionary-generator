@@ -22,4 +22,5 @@ public class ModelClass extends Descriptor {
         Gson gson = new GsonBuilder().registerTypeAdapter(ModelClass.class, new UsdmJsonSerializer()).create();
         return gson.toJson(this);
     }
+
 }

@@ -1,15 +1,15 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<xmi:XMI xmi:version="2.1" xmlns:uml="http://schema.omg.org/spec/UML/2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1">
+<?xml version="1.0" encoding="windows-1252"?>
+<xmi:XMI xmlns:uml="http://www.omg.org/spec/UML/20161101" xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmlns:umldi="http://www.omg.org/spec/UML/20161101/UMLDI" xmlns:dc="http://www.omg.org/spec/UML/20161101/UMLDC">
     <xmi:Documentation exporter="Enterprise Architect" exporterVersion="6.5" exporterID="1559"/>
-    <uml:Model xmi:type="uml:Model" name="EA_Model" visibility="public">
-    <packagedElement xmi:type="uml:Package" xmi:id="EAPK_9C98E96A_ACD6_447d_A5F8_0B40273B57FF" name="Model" visibility="public">
-    </packagedElement>
-        <packagedElement xmi:type="uml:Class" xmi:id="EAID_D160D5CE_CD2C_48b9_8F14_072AFD3AE3AA" name="Activity" visibility="public">
-            <ownedAttribute xmi:type="uml:Property" xmi:id="EAID_A404D7B6_8614_4a10_9F96_B85602809857" name="activityDescription" visibility="private" isStatic="false" isReadOnly="false" isDerived="false" isOrdered="false" isUnique="true" isDerivedUnion="false">
-                <lowerValue xmi:type="uml:LiteralInteger" xmi:id="EAID_LI000001_8614_4a10_9F96_B85602809857" value="1"/>
-                <upperValue xmi:type="uml:LiteralInteger" xmi:id="EAID_LI000002_8614_4a10_9F96_B85602809857" value="1"/>
+    <uml:Model xmi:type="uml:Model" name="EA_Model">
+        <packagedElement xmi:type="uml:Package" xmi:id="EAPK_24B05BEA_9144_4d83_9A17_F063C8B42C87" name="model">
+        <packagedElement xmi:type="uml:Class" xmi:id="EAID_044F514C_8F14_4c17_9024_DEAD2C0725A8" name="Activity">
+            <ownedAttribute xmi:type="uml:Property" xmi:id="EAID_F32B5111_C444_4345_85A9_6EDB72808A00" name="activityDesc" visibility="private">
+                <lowerValue xmi:type="uml:LiteralInteger" xmi:id="EAID_LI000001_C444_4345_85A9_6EDB72808A00" value="1"/>
+                <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="EAID_LI000002_C444_4345_85A9_6EDB72808A00" value="1"/>
                 <type xmi:idref="EAJava_String"/>
             </ownedAttribute>
+        </packagedElement>
         </packagedElement>
     <packagedElement xmi:type="uml:Class" xmi:id="AABA" name="Cranberry" visibility="public">
     </packagedElement>
