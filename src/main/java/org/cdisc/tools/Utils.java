@@ -1,8 +1,12 @@
 package org.cdisc.tools;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 import net.steppschuh.markdowngenerator.table.Table;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,32 +102,54 @@ public class Utils {
         }
         Table.Builder tableBuilder = new Table.Builder()
                 .withAlignments(Table.ALIGN_LEFT, Table.ALIGN_LEFT, Table.ALIGN_LEFT, Table.ALIGN_LEFT, Table.ALIGN_LEFT);
+        // Prepare Alternative CSV Output
+        enum outputHeaders {
+            status, class_name, property_name, data_type
+        }
+
+        try {
+            CSVPrinter printer = new CSVPrinter(new FileWriter("output.csv"), CSVFormat.RFC4180
+                    .withHeader(outputHeaders.class));
+
         tableBuilder.addRow("Status", "Class Name", "Property Name", "Data Type");
-        newModelClasses.forEach(entry -> {
-            // Class Row
-            tableBuilder.addRow("Class - NEW", entry.getName(), null, null);
-            entry.getProperties().entrySet().forEach(propEntry -> {
-                // Property Rows
-                tableBuilder.addRow(null, null, propEntry.getValue().getName(),
-                        propEntry.getValue().getType().replace("<", "\\<"));
-            });
-        });
-        removedModelClasses.forEach(entry -> {
-            // Class Row
-            tableBuilder.addRow("Class - DELETED", entry.getName(), null, null);
-            entry.getProperties().entrySet().forEach(propEntry -> {
-                // Property Rows
-                tableBuilder.addRow(null, null, propEntry.getValue().getName(),
-                        propEntry.getValue().getType().replace("<", "\\<"));
-            });
-        });
-        tableBuilder.addRow("",null);
-        newProps.forEach((entry, prop) -> {
-            tableBuilder.addRow("Property - NEW", entry, prop.getName(), prop.getType());
-        });
-        removedProps.forEach((entry, prop) -> {
-            tableBuilder.addRow("Property - DELETED", entry, prop.getName(), prop.getType());
-        });
+            for (ModelClass newModelClass : newModelClasses) {// Class Row
+                printer.printRecord("Class - NEW", newModelClass.getName(), null, null);
+                tableBuilder.addRow("Class - NEW", newModelClass.getName(), null, null);
+                for (Map.Entry<String, ModelClassProperty> propEntry : newModelClass.getProperties().entrySet()) {// Property Rows
+                    tableBuilder.addRow(null, null, propEntry.getValue().getName(),
+                            propEntry.getValue().getType().replace("<", "\\<"));
+                    printer.printRecord(null, null, propEntry.getValue().getName(),
+                            propEntry.getValue().getType());
+                }
+            }
+            for (ModelClass removedModelClass : removedModelClasses) {// Class Row
+                tableBuilder.addRow("Class - DELETED", removedModelClass.getName(), null, null);
+                printer.printRecord("Class - DELETED", removedModelClass.getName(), null, null);
+                for (Map.Entry<String, ModelClassProperty> propEntry : removedModelClass.getProperties().entrySet()) {// Property Rows
+                    printer.printRecord(null, null, propEntry.getValue().getName(),
+                            propEntry.getValue().getType());
+                    tableBuilder.addRow(null, null, propEntry.getValue().getName(),
+                            propEntry.getValue().getType().replace("<", "\\<"));
+                }
+            }
+            tableBuilder.addRow("",null);
+            printer.printRecord(null, null, null, null);
+            for (Map.Entry<String, ModelClassProperty> e : newProps.entrySet()) {
+                String key = e.getKey();
+                ModelClassProperty value = e.getValue();
+                printer.printRecord("Property - NEW", key, value.getName(), value.getType());
+                tableBuilder.addRow("Property - NEW", key, value.getName(), value.getType());
+            }
+            for (Map.Entry<String, ModelClassProperty> entry : removedProps.entrySet()) {
+                String key = entry.getKey();
+                ModelClassProperty prop = entry.getValue();
+                printer.printRecord("Property - DELETED", key, prop.getName(), prop.getType());
+                tableBuilder.addRow("Property - DELETED", key, prop.getName(), prop.getType());
+            }
+            printer.close(true);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         logger.info("LEAVE printDifferences");
         return tableBuilder;
     }
