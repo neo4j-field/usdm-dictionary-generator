@@ -59,6 +59,7 @@ public class UsdmParser {
                 Node currentItem = nodes.item(i);
                 Map<String, ModelClassProperty> properties = new HashMap<>();
                 String className = currentItem.getAttributes().getNamedItem("name").getNodeValue();
+                String classxmlId = currentItem.getAttributes().getNamedItem("xmi:id").getNodeValue();
                 elements.put(className, new ModelClass(className, properties, null));
                 ////xmi:XMI/uml:Model//packagedElement[@name='Activity']/ownedAttribute[@xmi:type='uml:Property']
 //                String propertyExprStr = String.format("//xmi:XMI/uml:Model//packagedElement[@name='%1$s']/" +
@@ -87,6 +88,29 @@ public class UsdmParser {
                     if (propTypesNodes.getLength() == 0) {
                         logger.warn(String.format("Ignoring duplicate property in UML XMI: %1$s", propName));
                     }
+                }
+                // ---- Populate links
+                // This gets all the connectors whenever this class is stated as source
+                String linkStrExpr = String.format("//connectors/connector/source[@xmi:idref='%1$s']/..", classxmlId);
+                XPathExpression linksExpr = xPath.compile(linkStrExpr);
+                Object connectorResults = linksExpr.evaluate(document, XPathConstants.NODESET);
+                NodeList connectorNodes = (NodeList) connectorResults;
+                // For each connector, pull target
+                for (int k = 0; k < connectorNodes.getLength(); k++) {
+                    Node currentConnector = connectorNodes.item(k);
+                    Node linkPropRef = currentConnector.getChildNodes().item(3)
+                            .getChildNodes().item(3).getAttributes().getNamedItem("name");
+                    if (linkPropRef != null) {
+                        ModelClassProperty linkedProp = elements.get(className).getProperties().get(linkPropRef.getNodeValue());
+                        Node multiplicityRef = currentConnector.getChildNodes().item(3)
+                                .getChildNodes().item(5).getAttributes().getNamedItem("multiplicity");
+                        if (multiplicityRef != null) {
+                            linkedProp.setMultiplicity(multiplicityRef.getNodeValue());
+                            logger.debug(multiplicityRef.getNodeValue());
+                        }
+
+                        logger.debug(linkPropRef.getNodeValue());
+                    }
 
                 }
             }
@@ -94,6 +118,15 @@ public class UsdmParser {
         else {
             logger.warn(String.format("%1$s: No elements found",document.getDocumentURI()));
         }
+        logger.info("Proceeding to link/connector loading");
+//        for (Map.Entry<String, ModelClass> entry : elements.entrySet()) {
+//            String name = entry.getKey();
+//            ModelClass classElement = entry.getValue();
+//            expr = xPath.compile("//connectors/connector");
+//        }
+
+        expr = xPath.compile("//connectors/connector");
+
         logger.debug("LEAVE - loadFromUsdmXmi");
     }
 

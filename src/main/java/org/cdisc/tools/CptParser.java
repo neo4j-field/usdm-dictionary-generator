@@ -97,14 +97,18 @@ public class CptParser {
                     // These null checks are necessary to cover inconsistencies between XMI and CT Spreadsheet
                     if (modelClass != null) {
                         if (elementType.equals("Entity")) {
-                            if (record.size() >= 8) modelClass.setDescription(record.get(7));
+                            if (record.size() >= 8) modelClass.setDefinition(record.get(7));
+                            modelClass.setPreferredTerm(record.get(5));
+                            modelClass.setDefNciCode(record.get(4));
                         }
                         else if (elementType.equals("Relationship") || elementType.equals("Attribute")) {
                             ModelClassProperty property = modelElements.get(record.get(1)).getProperties().get(record.get(3));
                             if (property != null) {
                                 if (record.size() >= 8)  {
                                     // Update Description and CodeList references
-                                    property.setDescription(record.get(7));
+                                    property.setDefinition(record.get(7));
+                                    property.setPreferredTerm(record.get(5));
+                                    property.setDefNciCode(record.get(4));
                                     if (record.get(8).trim().toUpperCase().contains("Y")) {
                                         String codeListRef = record.get(8).replace("Y","").trim();
                                         property.setCodeListReference(List.of(codeListRef));

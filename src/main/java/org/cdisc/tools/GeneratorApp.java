@@ -49,15 +49,18 @@ public class GeneratorApp {
                 // Generate the markdown for documentation purposes
                 Table.Builder tableBuilder = new Table.Builder()
                         .withAlignments(Table.ALIGN_LEFT, Table.ALIGN_CENTER, Table.ALIGN_LEFT, Table.ALIGN_LEFT, Table.ALIGN_LEFT);
-                tableBuilder.addRow("Class Name", "Property Name", "Type", "Description", "Codelist Ref");
+                tableBuilder.addRow("Class Name", "Attribute Name", "Type", "NCI C-Code", "Cardinality", "Preferred Term", "Definition", "Codelist Ref");
                 allModelElements.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> {
                     // Class Row
-                    tableBuilder.addRow(entry.getValue().getName(), null, null, entry.getValue().getDescription(), null);
+                    tableBuilder.addRow(entry.getValue().getName(), null, null, entry.getValue().getDefNciCode(),
+                            null, entry.getValue().getPreferredTerm(), entry.getValue().getDefinition(), null);
                     entry.getValue().getProperties().entrySet().forEach(propEntry -> {
                         // Property Rows
                         tableBuilder.addRow(null, propEntry.getValue().getName(),
                                 propEntry.getValue().getType().replace("<", "\\<"),
-                                propEntry.getValue().getDescription(), propEntry.getValue().getCodeListReference());
+                                propEntry.getValue().getDefNciCode(), propEntry.getValue().getMultiplicity(),
+                                propEntry.getValue().getPreferredTerm(),
+                                propEntry.getValue().getDefinition(), propEntry.getValue().getCodeListReference());
                     });
                 });
                 System.out.println(tableBuilder.build());

@@ -13,7 +13,7 @@ public class UsdmJsonSerializer implements JsonSerializer<ModelClass> {
     public JsonElement serialize(ModelClass modelClass, Type type, JsonSerializationContext jsonSerializationContext) {
         JsonObject jsonObject = new JsonObject();
         jsonObject.add("className", jsonSerializationContext.serialize(modelClass.getName()));
-        jsonObject.add("classDescription", jsonSerializationContext.serialize(modelClass.getDescription()));
+        jsonObject.add("classDescription", jsonSerializationContext.serialize(modelClass.getDefinition()));
         jsonObject.add("properties", jsonSerializationContext.serialize(modelClass.getProperties()));
         return jsonObject;
     }

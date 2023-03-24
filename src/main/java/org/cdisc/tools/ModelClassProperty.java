@@ -12,6 +12,9 @@ public class ModelClassProperty extends Descriptor {
     @Getter
     @Setter
     private List<String> codeListReference;
+    @Getter
+    @Setter
+    private String multiplicity;
 
     public ModelClassProperty(String name, String type, List<String> codeListReference, String description) {
         super(name, description);
