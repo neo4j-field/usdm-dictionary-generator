@@ -1,5 +1,7 @@
 package org.cdisc.tools;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import net.steppschuh.markdowngenerator.table.Table;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
 import org.apache.xmlbeans.XmlException;
@@ -9,9 +11,13 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 public class GeneratorApp {
@@ -21,6 +27,8 @@ public class GeneratorApp {
 
     private static final String PREV_RELEASE_FOLDER_NAME = "prevRelease/";
     private static final String CURR_RELEASE_FOLDER_NAME = "currentRelease/";
+
+    private static final String CARDINALITY_JSON_FILE_NAME = "cardinalities.json";
 
     private static final Logger logger = LoggerFactory.getLogger(GeneratorApp.class);
 
@@ -44,6 +52,11 @@ public class GeneratorApp {
                 // Complete with information from the CT Spreadsheet
                 CptParser cptParser = new CptParser(CPT_FILE_NAME);
                 cptParser.populateMapwithCpt(allModelElements);
+                // Pull additional cardinalities from json file
+                Gson gson = new Gson();
+                var cardinalityFileUrl = GeneratorApp.class.getClassLoader().getResource(CARDINALITY_JSON_FILE_NAME);
+                var type = new TypeToken<Map<String, IDCardinality>>(){}.getType();
+                Map<String, IDCardinality> cardinalityMap = gson.fromJson(new FileReader(cardinalityFileUrl.getPath()), type);
                 logger.info("Finished processing files");
                 logger.info("Moving on to Markdown Output");
                 // Generate the markdown for documentation purposes
@@ -56,9 +69,14 @@ public class GeneratorApp {
                             null, entry.getValue().getPreferredTerm(), entry.getValue().getDefinition(), null);
                     entry.getValue().getProperties().entrySet().forEach(propEntry -> {
                         // Property Rows
+                        String cardinality = propEntry.getValue().getMultiplicity();
+                        if (cardinality == null || cardinality == "") {
+                            if (cardinalityMap.get(entry.getValue().getName()) != null)
+                                cardinality = cardinalityMap.get(entry.getValue().getName()).getCardinalities().getOrDefault(propEntry.getValue().getName(), null);
+                        }
                         tableBuilder.addRow(null, propEntry.getValue().getName(),
                                 propEntry.getValue().printType().replace("<", "\\<"),
-                                propEntry.getValue().getDefNciCode(), propEntry.getValue().getMultiplicity(),
+                                propEntry.getValue().getDefNciCode(), cardinality,
                                 propEntry.getValue().getPreferredTerm(),
                                 propEntry.getValue().getDefinition(), propEntry.getValue().printCodeLists());
                     });
@@ -91,5 +109,9 @@ public class GeneratorApp {
             }
             logger.info("All done");
         }
+    }
+    class TypeDTO {
+        int id;
+        String name;
     }
 }
