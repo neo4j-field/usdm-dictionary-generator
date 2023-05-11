@@ -13,23 +13,28 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-
+/** USDM Dictionary/Release Delta File Generator App
+ * Depending on the arguments sent to this application, it will either generate a markup table with the Data Dictionary
+ * or generate a csv file ("output.csv") with the structural differences between the actual and previous release of the
+ * UML XMIs. In this latter case, each file should be placed in their corresponding subfolders under "resources".
+ * Additionally, a "cardinalities.json" file should be present to state cardinalities that cannot currently be inferred
+ * from the UML. This is a practise that should be discarded in the short term in favor of model refactoring.
+ * See "Run Configurations" in the IDEA Project to execute this application in either mode.
+ */
 public class GeneratorApp {
 
+    // Primary Input file names to generate Dictionary Table
     private static final String XML_FILE_NAME = "USDM_UML.xmi";
     private static final String CPT_FILE_NAME = "USDM_CT.xlsx";
-
+    // Folder names used to generate release differences
     private static final String PREV_RELEASE_FOLDER_NAME = "prevRelease/";
     private static final String CURR_RELEASE_FOLDER_NAME = "currentRelease/";
-
+    // Cardinalities file
     private static final String CARDINALITY_JSON_FILE_NAME = "cardinalities.json";
-
+    // The logger is configured in log4j2.xml. By default it will output to dictionaryGenerator.log and the console
     private static final Logger logger = LoggerFactory.getLogger(GeneratorApp.class);
 
     public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException,
@@ -38,18 +43,17 @@ public class GeneratorApp {
         try (
                 var file = GeneratorApp.class.getClassLoader().getResourceAsStream(XML_FILE_NAME);
         ) {
-
+            // Generate the Markdown for the Data Dictionary Table
             if (args[0].equals("--gen-table")) {
-
-                // Process the UML XMI Model first
-                // TODO - MUST RECHECK!!!
+                // Process the Main UML XMI Model first
                 UsdmParser usdmParser = new UsdmParser(file);
+                // allModelElements contains a deserialized representation of the UML
                 Map<String, ModelClass> allModelElements = new HashMap<>();
                 usdmParser.loadFromUsdmXmi(allModelElements);
                 if (allModelElements.isEmpty()) {
                     throw new RuntimeException("Possible Usdm XMI Parsing Error. Check file and structure");
                 }
-                // Complete with information from the CT Spreadsheet
+                // Next, add more detailed information from the CT Spreadsheet
                 CptParser cptParser = new CptParser(CPT_FILE_NAME);
                 cptParser.populateMapwithCpt(allModelElements);
                 // Pull additional cardinalities from json file
@@ -83,6 +87,7 @@ public class GeneratorApp {
                 });
                 System.out.println(tableBuilder.build());
             } else if (args[0].equals("--compare-releases")) {
+                // Generate the Delta between releases
                 var prevFile = GeneratorApp.class.getClassLoader().getResourceAsStream(PREV_RELEASE_FOLDER_NAME + XML_FILE_NAME);
                 var currFile = GeneratorApp.class.getClassLoader().getResourceAsStream(CURR_RELEASE_FOLDER_NAME + XML_FILE_NAME);
 
@@ -109,9 +114,5 @@ public class GeneratorApp {
             }
             logger.info("All done");
         }
-    }
-    class TypeDTO {
-        int id;
-        String name;
     }
 }

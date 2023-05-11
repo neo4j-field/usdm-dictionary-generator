@@ -1,185 +1,193 @@
 {
   "Activity": {
     "cardinalities": {
-      "activityId": "1:0..1",
-      "bcCategoryId": "1:0..*",
-      "previousActivityId": "1:0..1",
-      "biomedicalConceptId": "1:0..*",
-      "activityTimelineId": "1:0..1",
-      "nextActivityId": "1:0..1"
+      "activityId": "1..1",
+      "bcCategoryId": "0..*",
+      "previousActivityId": "0..1",
+      "biomedicalConceptId": "0..*",
+      "activityTimelineId": "0..1",
+      "nextActivityId": "0..1",
+      "bcCategoryIds": "0..*",
+      "biomedicalConceptIds": "0..*",
+      "bcSurrogateIds": "0..*"
     }
   },
   "AliasCode": {
     "cardinalities": {
-      "aliasCodeId": "1:0..1"
+      "aliasCodeId": "1..1"
     }
   },
   "AnalysisPopulation": {
     "cardinalities": {
-      "analysisPopulationId": "1:0..1"
+      "analysisPopulationId": "1..1"
     }
   },
   "BiomedicalConcept": {
     "cardinalities": {
-      "biomedicalConceptId": "1:0..1"
+      "biomedicalConceptId": "1..1",
+      "bcSynonyms": "0..*"
     }
   },
   "BiomedicalConceptCategory": {
     "cardinalities": {
-      "bcCategoryParentId": "1:0..*",
-      "bcCategoryChildrenId": "1:0..*",
-      "biomedicalConceptCategoryId": "1:0..1"
+      "bcCategoryParentId": "0..*",
+      "bcCategoryChildrenId": "0..*",
+      "biomedicalConceptCategoryId": "1..1",
+      "bcCategoryParentIds": "0..*",
+      "bcCategoryMemberIds": "0..*",
+      "bcCategoryChildrenIds": "0..*"
     }
   },
   "BiomedicalConceptProperty": {
     "cardinalities": {
-      "bcPropertyId": "1:0..1"
+      "bcPropertyId": "1..1"
     }
   },
   "BiomedicalConceptSurrogate": {
     "cardinalities": {
-      "bcSurrogateId": "1:0..1"
+      "bcSurrogateId": "1..1"
     }
   },
   "Code": {
     "cardinalities": {
-      "codeId": "1:0..1"
+      "codeId": "1..1"
     }
   },
   "Encounter": {
     "cardinalities": {
-      "previousEncounterId": "1:0..1",
-      "encounterScheduledAtTimingId": "1:0..1",
-      "nextEncounterId": "1:0..1",
-      "encounterId": "1:0..1"
+      "previousEncounterId": "0..1",
+      "encounterScheduledAtTimingId": "0..1",
+      "nextEncounterId": "0..1",
+      "encounterId": "1..1"
     }
   },
   "Endpoint": {
     "cardinalities": {
-      "endpointId": "1:0..1"
+      "endpointId": "1..1"
     }
   },
   "Estimand": {
     "cardinalities": {
-      "estimandId": "1:0..1"
+      "estimandId": "1..1"
     }
   },
   "Indication": {
     "cardinalities": {
-      "indicationId": "1:0..1"
+      "indicationId": "1..1"
     }
   },
   "IntercurrentEvent": {
     "cardinalities": {
-      "intercurrentEventId": "1:0..1"
+      "intercurrentEventId": "1..1"
     }
   },
   "InvestigationalIntervention": {
     "cardinalities": {
-      "investigationalInterventionId": "1:0..1"
+      "investigationalInterventionId": "1..1"
     }
   },
   "Objective": {
     "cardinalities": {
-      "objectiveId": "1:0..1"
+      "objectiveId": "1..1"
     }
   },
   "Organization": {
     "cardinalities": {
-      "organizationId": "1:0..1"
+      "organizationId": "1..1"
     }
   },
   "Procedure": {
     "cardinalities": {
-      "procedureId": "1:0..1"
+      "procedureId": "1..1"
     }
   },
   "ResponseCode": {
     "cardinalities": {
-      "responseCodeId": "1:0..1"
+      "responseCodeId": "1..1"
     }
   },
   "ScheduleTimeline": {
     "cardinalities": {
-      "scheduleTimelineId": "1:0..1",
-      "scheduleTimelineEntryId": "1:0..1"
+      "scheduleTimelineId": "1..1",
+      "scheduleTimelineEntryId": "0..1"
     }
   },
   "ScheduleTimelineExit": {
     "cardinalities": {
-      "scheduleTimelineExitId": "1:0..1"
+      "scheduleTimelineExitId": "1..1"
     }
   },
   "ScheduledActivityInstance": {
     "cardinalities": {
-      "activityId": "1:0..*"
+      "activityIds": "0..*"
     }
   },
   "ScheduledInstance": {
     "cardinalities": {
-      "scheduledInstanceId": "1:0..1",
-      "scheduledInstanceEncounterId": "1:0..1",
-      "scheduleTimelineExitId": "1:0..1",
-      "scheduledInstanceTimelineId": "1:0..1"
+      "scheduledInstanceId": "1..1",
+      "scheduledInstanceEncounterId": "0..1",
+      "scheduleTimelineExitId": "0..1",
+      "scheduledInstanceTimelineId": "0..1"
     }
   },
   "Study": {
     "cardinalities": {
-      "studyId": "1:0..1"
+      "studyId": "0..1"
     }
   },
   "StudyArm": {
     "cardinalities": {
-      "studyArmId": "1:0..1"
+      "studyArmId": "1..1"
     }
   },
   "StudyCell": {
     "cardinalities": {
-      "studyCellId": "1:0..1"
+      "studyCellId": "1..1"
     }
   },
   "StudyDesign": {
     "cardinalities": {
-      "studyDesignId": "1:0..1"
+      "studyDesignId": "1..1"
     }
   },
   "StudyDesignPopulation": {
     "cardinalities": {
-      "studyDesignPopulationId": "1:0..1"
+      "studyDesignPopulationId": "1..1"
     }
   },
   "StudyElement": {
     "cardinalities": {
-      "studyElementId": "1:0..1"
+      "studyElementId": "1..1"
     }
   },
   "StudyEpoch": {
     "cardinalities": {
-      "nextStudyEpochId": "1:0..1",
-      "previousStudyEpochId": "1:0..1",
-      "studyEpochId": "1:0..1"
+      "nextStudyEpochId": "0..1",
+      "previousStudyEpochId": "0..1",
+      "studyEpochId": "1..1",
+      "encounterIds": "0..*"
     }
   },
   "StudyIdentifier": {
     "cardinalities": {
-      "studyIdentifierId": "1:0..1"
+      "studyIdentifierId": "1..1"
     }
   },
   "StudyProtocolVersion": {
     "cardinalities": {
-      "studyProtocolVersionId": "1:0..1"
+      "studyProtocolVersionId": "1..1"
     }
   },
   "Timing": {
     "cardinalities": {
-      "timingId": "1:0..1",
-      "relativeFromScheduledInstanceId": "1:0..1",
-      "relativeToScheduledInstanceId": "1:0..1"
+      "timingId": "1..1",
+      "relativeFromScheduledInstanceId": "0..1",
+      "relativeToScheduledInstanceId": "0..1"
     }
   },
   "TransitionRule": {
     "cardinalities": {
-      "transitionRuleId": "1:0..1"
+      "transitionRuleId": "1..1"
     }
   }
 }

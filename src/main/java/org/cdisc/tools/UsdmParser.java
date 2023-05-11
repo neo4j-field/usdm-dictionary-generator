@@ -23,6 +23,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
+/**
+ * USDM Parser - The main Objective of this class is to provide with the tools necessary to parse the USDM UML XMI.
+ * It is used in generating the Markdown Table and the delta between releases.
+ * From a functional point of view, it will parse the XMI file (with special care to the xml namespaces, which have
+ * been seen to change between releases) and load elements (found using XPATH) into ModelClass instances.
+ */
 public class UsdmParser {
 
     private static final Logger logger = LoggerFactory.getLogger(UsdmParser.class);
@@ -30,6 +36,13 @@ public class UsdmParser {
     private Document document = null;
     private Set<String> namespaces = null;
 
+    /**
+     * Constructor must be invoked with a valid inputsream of the XMI file
+     * @param file - Inputstream of UML XMI File
+     * @throws ParserConfigurationException
+     * @throws IOException
+     * @throws SAXException
+     */
     public UsdmParser(InputStream file) throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
@@ -45,6 +58,11 @@ public class UsdmParser {
 
     }
 
+    /**
+     * Populates ModelClass elements as a map of <"Element Name", "ModelClass>
+     * @param elements - Will be mutated with results of the parsing process
+     * @throws XPathExpressionException
+     */
     public void loadFromUsdmXmi(Map<String, ModelClass> elements) throws XPathExpressionException {
         logger.debug("ENTER - loadFromUsdmXmi");
         XPath xPath = setUpPath();
@@ -118,15 +136,6 @@ public class UsdmParser {
         else {
             logger.warn(String.format("%1$s: No elements found",document.getDocumentURI()));
         }
-        logger.info("Proceeding to link/connector loading");
-//        for (Map.Entry<String, ModelClass> entry : elements.entrySet()) {
-//            String name = entry.getKey();
-//            ModelClass classElement = entry.getValue();
-//            expr = xPath.compile("//connectors/connector");
-//        }
-
-        expr = xPath.compile("//connectors/connector");
-
         logger.debug("LEAVE - loadFromUsdmXmi");
     }
 

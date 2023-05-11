@@ -7,20 +7,24 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
-import org.apache.poi.xssf.extractor.XSSFEventBasedExcelExtractor;
 import org.apache.poi.xssf.extractor.XSSFExcelExtractor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.xmlbeans.XmlException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+/**
+ * Tools to generate detailed information from the CPT Spreadsheet, and populate ModelClass with it
+ * There can be situations in which this process will fail, especially if the spreadsheet contains formatting data,
+ * or anything that cannot be interpreted by apache poi directly. In such cases the spreadsheet itself has been fixed
+ * before submitted to this process.
+ */
 public class CptParser {
 
     private static final Logger logger = LoggerFactory.getLogger(CptParser.class);
@@ -32,15 +36,16 @@ public class CptParser {
         this.inputFileName = inputFileName;
         try {
             var tmpUrl = CptParser.class.getProtectionDomain().getCodeSource().getLocation().toURI();
+            // A temp csv file will always be generated as part of parsing the incoming Excel file
             tmpCsvFileName = tmpUrl.getPath() + "output.csv";
-            generateCsvFileFromCptSpreadsheet(true);
+            generateCsvFileFromCptSpreadsheet();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
 
     }
 
-    private void generateCsvFileFromCptSpreadsheet(boolean userModel) throws URISyntaxException, IOException, InvalidFormatException {
+    private void generateCsvFileFromCptSpreadsheet() throws URISyntaxException, IOException, InvalidFormatException {
         var url = CptParser.class.getClassLoader().getResource(this.inputFileName);
         XSSFWorkbook workbook = new XSSFWorkbook(new File(url.toURI().getPath()));
         CSVPrinter printer = new CSVPrinter(new FileWriter(tmpCsvFileName), CSVFormat.RFC4180.withDelimiter(','));
@@ -56,35 +61,11 @@ public class CptParser {
         });
     }
 
-    private void generateCsvFileFromCptSpreadsheet() throws IOException, OpenXML4JException, XmlException {
-        var url = CptParser.class.getClassLoader().getResource(this.inputFileName);
-
-        try (XSSFEventBasedExcelExtractor tsv = new XSSFEventBasedExcelExtractor(url.toURI().getPath())) {
-            CSVPrinter printer = new CSVPrinter(new FileWriter(tmpCsvFileName), CSVFormat.RFC4180.withDelimiter(','));
-            // We need to include sheet names so that we can skip the stuff we don't need
-            tsv.setIncludeCellComments(false);
-            tsv.setLocale(Locale.US);
-
-            String[] contents = tsv.getText().split("\n");
-            for (String record: contents) {
-                // Break the loop as soon as we find the worksheet we don't care about
-                if (record.contains("DDF valid value sets")) {
-                    break;
-                }
-                String[] rowElements = record.replace("\u00a0","").split("\t");
-                for (String element: rowElements) {
-                    printer.print(element);
-                }
-                printer.println();
-                printer.flush();
-            }
-            printer.close();
-        } catch (URISyntaxException e) {
-            logger.error(e.getMessage(), e);
-            throw new RuntimeException(e.getMessage());
-        }
-    }
-
+    /**
+     * This is the primary method, in charge of populating the ModelClass instance with details from the spreadsheet
+     * @param modelElements
+     * @throws IOException
+     */
     public void populateMapwithCpt(Map<String, ModelClass> modelElements) throws IOException {
         logger.debug("ENTER - populateMapwithCpt");
         Reader reader = new InputStreamReader(new BOMInputStream(new FileInputStream((tmpCsvFileName))), StandardCharsets.UTF_8);

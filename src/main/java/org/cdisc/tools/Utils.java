@@ -15,25 +15,11 @@ public class Utils {
 
     private static final Logger logger = LoggerFactory.getLogger(Utils.class);
 
-    // TODO - This one is probably not necessary after all
-    public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
-        List<Map.Entry<K, V>> list = new ArrayList<>(map.entrySet());
-        list.sort(Map.Entry.comparingByValue());
-
-        Map<K, V> result = new LinkedHashMap<>();
-        for (Map.Entry<K, V> entry : list) {
-            result.put(entry.getKey(), entry.getValue());
-        }
-
-        return result;
-    }
-
-
     public static Table.Builder printDifferences(Map<String, ModelClass> prev, Map<String, ModelClass> curr) {
         logger.info("ENTER printDifferences");
         //  Props: {ClassName: <Property Obj>}
-        Map<String, ModelClassProperty> newProps = new HashMap<>();
-        Map<String, ModelClassProperty> removedProps = new HashMap<>();
+        Map<String, List<ModelClassProperty>> newProps = new HashMap<>();
+        Map<String, List<ModelClassProperty>> removedProps = new HashMap<>();
         List<ModelClass> newModelClasses = new ArrayList<>();
         List<ModelClass> removedModelClasses = new ArrayList<>();
 
@@ -49,6 +35,9 @@ public class Utils {
             // Begin by looking for changes in class name
             String prevClassName = (i < prevClasses.size()) ? prevClasses.get(i).getName():"";
             String currClassName = (j < currClasses.size()) ? currClasses.get(j).getName():"";
+
+            List<ModelClassProperty> removedPropsList = new ArrayList<>();
+            List<ModelClassProperty> addedPropsList = new ArrayList<>();
 
             if (!prevClassName.equals(currClassName)) {
                 // A class name has been removed
@@ -76,17 +65,18 @@ public class Utils {
                 while (k < prevProperties.size() && l < currProperties.size()) {
                     String prevPropName = (k < prevProperties.size()) ? prevProperties.get(k).getName(): "";
                     String currPropName = (l < currProperties.size()) ? currProperties.get(l).getName(): "";
-
                     if (!prevPropName.equals(currPropName)) {
                         // A property name has been removed
                         if (prevPropName.compareTo(currPropName) < 0 || currPropName.equals("")) {
-                            removedProps.put(prevClasses.get(i).getName(), prevProperties.get(k));
+                            removedPropsList.add(prevProperties.get(k));
+                            //removedProps.put(prevClasses.get(i).getName(), prevProperties.get(k));
                             logger.debug(String.format("Property Name Removed! %1$s", prevPropName));
                             k++;
                         }
                         // A new property is present
                         else {
-                            newProps.put(currClasses.get(j).getName(), currProperties.get(l));
+                            addedPropsList.add(currProperties.get(l));
+                            //newProps.put(currClasses.get(j).getName(), currProperties.get(l));
                             logger.debug(String.format("New Property Name found! %1$s", currPropName));
                             l++;
                         }
@@ -96,6 +86,8 @@ public class Utils {
                         l++;
                     }
                 }
+                removedProps.put(prevClasses.get(i).getName(), removedPropsList);
+                newProps.put(currClasses.get(j).getName(), addedPropsList);
                 i++;
                 j++;
             }
@@ -134,17 +126,21 @@ public class Utils {
             }
             tableBuilder.addRow("",null);
             printer.printRecord(null, null, null, null);
-            for (Map.Entry<String, ModelClassProperty> e : newProps.entrySet()) {
+            for (Map.Entry<String, List<ModelClassProperty>> e : newProps.entrySet()) {
                 String key = e.getKey();
-                ModelClassProperty value = e.getValue();
-                printer.printRecord("Property - NEW", key, value.getName(), value.getType());
-                tableBuilder.addRow("Property - NEW", key, value.getName(), value.getType());
+                List<ModelClassProperty> value = e.getValue();
+                for (ModelClassProperty property: value) {
+                    printer.printRecord("Property - NEW", key, property.getName(), property.getType());
+                    tableBuilder.addRow("Property - NEW", key, property.getName(), property.getType());
+                }
             }
-            for (Map.Entry<String, ModelClassProperty> entry : removedProps.entrySet()) {
+            for (Map.Entry<String, List<ModelClassProperty>> entry : removedProps.entrySet()) {
                 String key = entry.getKey();
-                ModelClassProperty prop = entry.getValue();
-                printer.printRecord("Property - DELETED", key, prop.getName(), prop.getType());
-                tableBuilder.addRow("Property - DELETED", key, prop.getName(), prop.getType());
+                List<ModelClassProperty> prop = entry.getValue();
+                for (ModelClassProperty property: prop) {
+                    printer.printRecord("Property - DELETED", key, property.getName(), property.getType());
+                    tableBuilder.addRow("Property - DELETED", key, property.getName(), property.getType());
+                }
             }
             printer.close(true);
         } catch (IOException e) {
