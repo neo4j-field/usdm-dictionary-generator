@@ -35,7 +35,7 @@
       "biomedicalConceptCategoryId": "1..1",
       "bcCategoryParentIds": "0..*",
       "bcCategoryMemberIds": "0..*",
-      "bcCategoryChildrenIds": "0..*"
+      "bcCategoryChildIds": "0..*"
     }
   },
   "BiomedicalConceptProperty": {
@@ -127,7 +127,9 @@
       "scheduledInstanceId": "1..1",
       "scheduledInstanceEncounterId": "0..1",
       "scheduleTimelineExitId": "0..1",
-      "scheduledInstanceTimelineId": "0..1"
+      "scheduledInstanceTimelineId": "0..1",
+      "defaultConditionId": "0..1",
+      "epochId": "0..1"
     }
   },
   "Study": {
@@ -142,7 +144,9 @@
   },
   "StudyCell": {
     "cardinalities": {
-      "studyCellId": "1..1"
+      "studyCellId": "1..1",
+      "studyArmId": "0..1",
+      "studyElementIds": "0..*"
     }
   },
   "StudyDesign": {

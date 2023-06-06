@@ -100,7 +100,7 @@ public class Utils {
         }
 
         try {
-            CSVPrinter printer = new CSVPrinter(new FileWriter("output.csv"), CSVFormat.RFC4180
+            CSVPrinter printer = new CSVPrinter(new FileWriter("UML_DELTA.csv"), CSVFormat.RFC4180
                     .withHeader(outputHeaders.class));
 
         tableBuilder.addRow("Status", "Class Name", "Property Name", "Data Type");

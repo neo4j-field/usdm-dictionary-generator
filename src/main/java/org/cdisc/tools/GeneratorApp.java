@@ -12,6 +12,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,12 +42,12 @@ public class GeneratorApp {
             XPathExpressionException, OpenXML4JException, XmlException {
 
         try (
-                var file = GeneratorApp.class.getClassLoader().getResourceAsStream(XML_FILE_NAME);
+                var currFile = GeneratorApp.class.getClassLoader().getResourceAsStream(CURR_RELEASE_FOLDER_NAME +XML_FILE_NAME);
         ) {
             // Generate the Markdown for the Data Dictionary Table
             if (args[0].equals("--gen-table")) {
                 // Process the Main UML XMI Model first
-                UsdmParser usdmParser = new UsdmParser(file);
+                UsdmParser usdmParser = new UsdmParser(currFile);
                 // allModelElements contains a deserialized representation of the UML
                 Map<String, ModelClass> allModelElements = new HashMap<>();
                 usdmParser.loadFromUsdmXmi(allModelElements);
@@ -85,11 +86,17 @@ public class GeneratorApp {
                                 propEntry.getValue().getDefinition(), propEntry.getValue().printCodeLists());
                     });
                 });
-                System.out.println(tableBuilder.build());
+                Table table = tableBuilder.build();
+                try (FileWriter out = new FileWriter("dataDictionary.MD")){
+                    out.write(table.toString());
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+                System.out.println(table);
             } else if (args[0].equals("--compare-releases")) {
                 // Generate the Delta between releases
                 var prevFile = GeneratorApp.class.getClassLoader().getResourceAsStream(PREV_RELEASE_FOLDER_NAME + XML_FILE_NAME);
-                var currFile = GeneratorApp.class.getClassLoader().getResourceAsStream(CURR_RELEASE_FOLDER_NAME + XML_FILE_NAME);
+                //var currFile = GeneratorApp.class.getClassLoader().getResourceAsStream(CURR_RELEASE_FOLDER_NAME + XML_FILE_NAME);
 
                 if (prevFile == null || currFile == null) {
                     logger.error("One of the input files could not be found");
