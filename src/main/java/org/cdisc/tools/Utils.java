@@ -41,7 +41,7 @@ public class Utils {
 
             if (!prevClassName.equals(currClassName)) {
                 // A class name has been removed
-                if (prevClassName.compareTo(currClassName) < 0 || currClassName.equals("")) {
+                if ((!prevClassName.equals("") && prevClassName.compareTo(currClassName) < 0) || currClassName.equals("")) {
                     removedModelClasses.add(prevClasses.get(i));
                     logger.debug(String.format("Class Name Removed! %1$s", prevClassName));
                     i++;
@@ -62,12 +62,12 @@ public class Utils {
                 int k = 0;
                 int l = 0;
 
-                while (k < prevProperties.size() && l < currProperties.size()) {
+                while (k < prevProperties.size() || l < currProperties.size()) {
                     String prevPropName = (k < prevProperties.size()) ? prevProperties.get(k).getName(): "";
                     String currPropName = (l < currProperties.size()) ? currProperties.get(l).getName(): "";
                     if (!prevPropName.equals(currPropName)) {
                         // A property name has been removed
-                        if (prevPropName.compareTo(currPropName) < 0 || currPropName.equals("")) {
+                        if ((!prevPropName.equals("") && prevPropName.compareTo(currPropName) < 0) || currPropName.equals("")) {
                             removedPropsList.add(prevProperties.get(k));
                             //removedProps.put(prevClasses.get(i).getName(), prevProperties.get(k));
                             logger.debug(String.format("Property Name Removed! %1$s", prevPropName));

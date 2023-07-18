@@ -1,4 +1,5 @@
 cd ../DDF-RA
+git fetch
 git checkout main
 git pull
 cp Deliverables/UML/USDM_UML.xmi ../usdm-dictionary-generator/src/main/resources/prevRelease/.
