@@ -107,6 +107,8 @@ public class CptParser {
                 }
                 logger.debug(record.toString());
             }
+        } catch (Exception e){
+            logger.error(e.getMessage());
         }
         logger.debug("LEAVE - populateMapwithCpt");
     }
