@@ -16,5 +16,5 @@ UML_DELTA get's renamed to UML_DELTA_<prev>_<current> (i.e UML_DELTA_1.11_1.14) 
     
     DDF-RA/Deliverables/UML
 
-dataDictionary.MD is used to update the Wiki at https://wiki.cdisc.org/display/USDMIGv1/USDM+Data+Dictionary
+dataDictionary.MD is used to update the Wiki at https://wiki.cdisc.org/display/USDMIGv1/USDM+Data+Dictionary  and pushed to the sprint branch in the same folder
 
