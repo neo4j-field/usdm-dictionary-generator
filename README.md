@@ -15,7 +15,7 @@ Use the pullXmis.sh script to copy the correct USDM_UML.xmi and USDM_CT.xslx fil
   - CT should avoid using line feeds.  Anything following will be truncated.
   - There a problem with the current spreadsheet that is causing an IO error
     - Something added with the Content class is causing the last few lines not to be read
-    - Since those lines are from the secons tab and not used by the generator it does not effect the output
+    - Since those lines are from the second tab and not used by the generator it does not effect the output
 
 Run GeneratorApp with `--compare-releases` to generate the `UML_DELTA.csv` file
     
