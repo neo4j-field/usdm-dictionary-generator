@@ -11,6 +11,7 @@ Use the pullXmis.sh script to copy the correct USDM_UML.xmi and USDM_CT.xslx fil
 - The script assumes that both Git Repos (DDF-RA and this one) have been cloned into the same parent folder
 - The Data dictionary generator uses the CT spreadsheet for details about the attributes
   - If the order of the columns change or if additional columns are added `CptParse.populateMapwithCpt` method will need to be updated.
+  - Class and Attribute names are case sensative in the lookup for details.
   - CT should avoid using line feeds.  Anything following will be truncated.
   - There a problem with the current spreadsheet that is causing an IO error
     - Something added with the Content class is causing the last few lines not to be read
