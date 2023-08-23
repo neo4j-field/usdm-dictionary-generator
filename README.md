@@ -21,8 +21,9 @@ Run GeneratorApp with `--compare-releases` to generate the `UML_DELTA.csv` file
     
 Run again with `--gen-table` to generate the `datadictionary.MD` file
 
-UML_DELTA get's renamed to UML_DELTA_<prev>_<current> (i.e UML_DELTA_1.11_1.14) and pushed to the sprint branch
-dataDictionary.MD is used to update the Wiki at https://wiki.cdisc.org/display/USDMIGv1/USDM+Data+Dictionary  and pushed to the sprint branch in the same folder
+`UML_DELTA.csv` get's renamed to UML_DELTA_<prev>_<current> (i.e UML_DELTA_1.11_1.14) and pushed to the sprint branch
+
+`dataDictionary.MD` is used to update the Wiki at https://wiki.cdisc.org/display/USDMIGv1/USDM+Data+Dictionary and pushed to the sprint branch in the same folder
     
     DDF-RA/Deliverables/UML
 
