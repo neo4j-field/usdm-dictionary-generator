@@ -97,14 +97,15 @@ public class UsdmParser {
                     XPathExpression propertyTypeExpr = xPath.compile(propertyTypeExprStr);
                     Object propTypesResult = propertyTypeExpr.evaluate(this.document, XPathConstants.NODESET);
                     NodeList propTypesNodes = (NodeList) propTypesResult;
-                    if (!properties.containsKey(propName)) {
+                    if (propTypesNodes.getLength() == 0) {
+                        logger.warn(String.format("Ignoring duplicate property in UML XMI: %1$s", propName));
+                    }
+                    else if (!properties.containsKey(propName)) {
+
                         String propType = propTypesNodes.item(0).getChildNodes()
                                 .item(7).getAttributes().getNamedItem("type").getNodeValue();
                         logger.debug(String.format("Found propType %1$s for %2$s", propType, propName));
                         properties.put(propName, new ModelClassProperty(propName, propType, null, null));
-                    }
-                    if (propTypesNodes.getLength() == 0) {
-                        logger.warn(String.format("Ignoring duplicate property in UML XMI: %1$s", propName));
                     }
                 }
                 // ---- Populate links

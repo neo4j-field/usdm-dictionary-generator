@@ -99,7 +99,12 @@ public class GeneratorApp {
                 //var currFile = GeneratorApp.class.getClassLoader().getResourceAsStream(CURR_RELEASE_FOLDER_NAME + XML_FILE_NAME);
 
                 if (prevFile == null || currFile == null) {
-                    logger.error("One of the input files could not be found");
+                    if (prevFile == null){
+                        logger.error("prevFile could not be found");
+                    }
+                    if (currFile == null){
+                        logger.error("currFile could not be found");
+                    }
                     throw new RuntimeException("Input file not found");
                 }
                 UsdmParser parserPrev = new UsdmParser(prevFile);
