@@ -3,6 +3,7 @@ package org.cdisc.tools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -24,10 +25,13 @@ import java.io.InputStream;
 import java.util.*;
 
 /**
- * USDM Parser - The main Objective of this class is to provide with the tools necessary to parse the USDM UML XMI.
+ * USDM Parser - The main Objective of this class is to provide with the tools
+ * necessary to parse the USDM UML XMI.
  * It is used in generating the Markdown Table and the delta between releases.
- * From a functional point of view, it will parse the XMI file (with special care to the xml namespaces, which have
- * been seen to change between releases) and load elements (found using XPATH) into ModelClass instances.
+ * From a functional point of view, it will parse the XMI file (with special
+ * care to the xml namespaces, which have
+ * been seen to change between releases) and load elements (found using XPATH)
+ * into ModelClass instances.
  */
 public class UsdmParser {
 
@@ -38,6 +42,7 @@ public class UsdmParser {
 
     /**
      * Constructor must be invoked with a valid inputsream of the XMI file
+     * 
      * @param file - Inputstream of UML XMI File
      * @throws ParserConfigurationException
      * @throws IOException
@@ -60,6 +65,7 @@ public class UsdmParser {
 
     /**
      * Populates ModelClass elements as a map of <"Element Name", "ModelClass>
+     * 
      * @param elements - Will be mutated with results of the parsing process
      * @throws XPathExpressionException
      */
@@ -67,7 +73,7 @@ public class UsdmParser {
         logger.debug("ENTER - loadFromUsdmXmi");
         XPath xPath = setUpPath();
         XPathExpression expr = xPath.compile("//xmi:XMI/uml:Model//packagedElement[@xmi:type='uml:Class']");
-//        XPathExpression expr = xPath.compile("//*[local-name()='uml:Class']");
+        // XPathExpression expr = xPath.compile("//*[local-name()='uml:Class']");
 
         Object result = expr.evaluate(document, XPathConstants.NODESET);
         NodeList nodes = (NodeList) result;
@@ -79,9 +85,10 @@ public class UsdmParser {
                 String className = currentItem.getAttributes().getNamedItem("name").getNodeValue();
                 String classxmlId = currentItem.getAttributes().getNamedItem("xmi:id").getNodeValue();
                 elements.put(className, new ModelClass(className, properties, null));
-                ////xmi:XMI/uml:Model//packagedElement[@name='Activity']/ownedAttribute[@xmi:type='uml:Property']
-//                String propertyExprStr = String.format("//xmi:XMI/uml:Model//packagedElement[@name='%1$s']/" +
-//                        "ownedAttribute[@xmi:type='uml:Property']", className);
+                // //xmi:XMI/uml:Model//packagedElement[@name='Activity']/ownedAttribute[@xmi:type='uml:Property']
+                // String propertyExprStr =
+                // String.format("//xmi:XMI/uml:Model//packagedElement[@name='%1$s']/" +
+                // "ownedAttribute[@xmi:type='uml:Property']", className);
                 String propertyExprStr = String.format("//xmi:XMI/uml:Model//packagedElement[@name='%1$s']/" +
                         "ownedAttribute[@xmi:type='uml:Property']", className);
                 XPathExpression propertyExpr = xPath.compile(propertyExprStr);
@@ -99,8 +106,7 @@ public class UsdmParser {
                     NodeList propTypesNodes = (NodeList) propTypesResult;
                     if (propTypesNodes.getLength() == 0) {
                         logger.warn(String.format("Ignoring duplicate property in UML XMI: %1$s", propName));
-                    }
-                    else if (!properties.containsKey(propName)) {
+                    } else if (!properties.containsKey(propName)) {
 
                         String propType = propTypesNodes.item(0).getChildNodes()
                                 .item(7).getAttributes().getNamedItem("type").getNodeValue();
@@ -116,11 +122,14 @@ public class UsdmParser {
                 NodeList connectorNodes = (NodeList) connectorResults;
                 // For each connector, pull target
                 for (int k = 0; k < connectorNodes.getLength(); k++) {
-                    Node currentConnector = connectorNodes.item(k);
-                    Node linkPropRef = currentConnector.getChildNodes().item(3)
-                            .getChildNodes().item(3).getAttributes().getNamedItem("name");
+                    Element currentConnector = (Element) connectorNodes.item(k);
+                    Node linkPropRef = currentConnector.getAttributeNode("name");
                     if (linkPropRef != null) {
-                        ModelClassProperty linkedProp = elements.get(className).getProperties().get(linkPropRef.getNodeValue());
+                        String propName = linkPropRef.getNodeValue();
+                        String propType = ((Element) ((Element) currentConnector.getElementsByTagName("target").item(0))
+                                .getElementsByTagName("model").item(0)).getAttribute("name");
+                        ModelClassProperty linkedProp = new ModelClassProperty(propName, propType, null, null);
+                        elements.get(className).getProperties().put(propName, linkedProp);
                         Node multiplicityRef = currentConnector.getChildNodes().item(3)
                                 .getChildNodes().item(5).getAttributes().getNamedItem("multiplicity");
                         if (multiplicityRef != null) {
@@ -133,9 +142,8 @@ public class UsdmParser {
 
                 }
             }
-        }
-        else {
-            logger.warn(String.format("%1$s: No elements found",document.getDocumentURI()));
+        } else {
+            logger.warn(String.format("%1$s: No elements found", document.getDocumentURI()));
         }
         logger.debug("LEAVE - loadFromUsdmXmi");
     }
@@ -147,7 +155,7 @@ public class UsdmParser {
             public String getNamespaceURI(String prefix) {
                 Map<String, String> uris = new HashMap<>();
                 List<String[]> names = namespaces.stream().map(item -> item.split(", ")).toList();
-                for (String[] name: names) {
+                for (String[] name : names) {
                     uris.put(name[1].trim(), name[2].trim());
                 }
                 String result = uris.getOrDefault(prefix, null);
@@ -173,8 +181,8 @@ public class UsdmParser {
             int evt = reader.next();
             if (evt == XMLStreamConstants.START_ELEMENT) {
                 QName qName = reader.getName();
-                if(qName != null){
-                    if(qName.getPrefix() != null && qName.getPrefix().compareTo("")!=0)
+                if (qName != null) {
+                    if (qName.getPrefix() != null && qName.getPrefix().compareTo("") != 0)
                         namespaces.add(String.format("%s, %s, %s",
                                 qName.getLocalPart(), qName.getPrefix(), qName.getNamespaceURI()));
                 }
