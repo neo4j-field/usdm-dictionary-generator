@@ -90,7 +90,7 @@ public class UsdmParser {
                 // String.format("//xmi:XMI/uml:Model//packagedElement[@name='%1$s']/" +
                 // "ownedAttribute[@xmi:type='uml:Property']", className);
                 String propertyExprStr = String.format("//xmi:XMI/uml:Model//packagedElement[@name='%1$s']/" +
-                        "ownedAttribute[@xmi:type='uml:Property']", className);
+                        "ownedAttribute[@xmi:type='uml:Property' and @name]", className);
                 XPathExpression propertyExpr = xPath.compile(propertyExprStr);
                 Object propsResult = propertyExpr.evaluate(this.document, XPathConstants.NODESET);
                 NodeList propsNodes = (NodeList) propsResult;
