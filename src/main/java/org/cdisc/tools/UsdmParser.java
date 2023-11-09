@@ -81,7 +81,7 @@ public class UsdmParser {
             logger.debug("Total Classes Found: " + nodes.getLength());
             for (int i = 0; i < nodes.getLength(); i++) {
                 Node currentItem = nodes.item(i);
-                Map<String, ModelClassProperty> properties = new HashMap<>();
+                Map<String, ModelClassProperty> properties = new LinkedHashMap<>();
                 String className = currentItem.getAttributes().getNamedItem("name").getNodeValue();
                 String classxmlId = currentItem.getAttributes().getNamedItem("xmi:id").getNodeValue();
                 elements.put(className, new ModelClass(className, properties, null));
