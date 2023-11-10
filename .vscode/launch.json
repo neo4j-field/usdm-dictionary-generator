@@ -25,6 +25,14 @@
       "mainClass": "org.cdisc.tools.GeneratorApp",
       "projectName": "usdm-dictionary-generator",
       "args": "--gen-table"
+    },
+    {
+      "type": "java",
+      "name": "Gen Structure",
+      "request": "launch",
+      "mainClass": "org.cdisc.tools.GeneratorApp",
+      "projectName": "usdm-dictionary-generator",
+      "args": "--gen-structure"
     }
   ]
 }
