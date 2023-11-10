@@ -15,19 +15,24 @@ public class ModelClassProperty extends Descriptor {
     @Getter
     @Setter
     private String multiplicity;
+    @Getter
+    @Setter
+    private String inheritedFrom;
 
-    public ModelClassProperty(String name, String type, List<String> codeListReference, String description) {
+    public ModelClassProperty(String name, String type, List<String> codeListReference, String description,
+            String inheritedFrom) {
         super(name, description);
         this.type = type;
         this.codeListReference = codeListReference;
+        this.inheritedFrom = inheritedFrom;
     }
 
     public String printCodeLists() {
         var returnVal = "";
         if (this.codeListReference != null) {
-            for (String element: this.codeListReference) {
+            for (String element : this.codeListReference) {
                 if (!element.toLowerCase().contains("point")) {
-                    element = element.replace("(","").replace(")","");
+                    element = element.replace("(", "").replace(")", "");
                 }
                 returnVal = returnVal.concat(element);
             }

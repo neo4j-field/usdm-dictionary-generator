@@ -101,7 +101,7 @@ public class GeneratorApp {
                     .withAlignments(Table.ALIGN_LEFT, Table.ALIGN_CENTER, Table.ALIGN_LEFT, Table.ALIGN_LEFT,
                             Table.ALIGN_LEFT);
             tableBuilder.addRow("Class Name", "Attribute Name", "Data Type", "NCI C-Code", "Cardinality",
-                    "Preferred Term", "Definition", "Codelist Ref");
+                    "Preferred Term", "Definition", "Codelist Ref", "Inherited From");
             allModelElements.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> {
                 // Class Row
                 tableBuilder.addRow(entry.getValue().getName(), null, null, entry.getValue().getDefNciCode(),
@@ -118,7 +118,9 @@ public class GeneratorApp {
                             propEntry.getValue().printType().replace("<", "\\<"),
                             propEntry.getValue().getDefNciCode(), cardinality,
                             propEntry.getValue().getPreferredTerm(),
-                            propEntry.getValue().getDefinition(), propEntry.getValue().printCodeLists());
+                            propEntry.getValue().getDefinition(), propEntry.getValue().printCodeLists(),
+                            propEntry.getValue().getInheritedFrom());
+
                 });
             });
             Table table = tableBuilder.build();
@@ -271,6 +273,9 @@ public class GeneratorApp {
                     attribute.put("Relationship Type",
                             attributeFromAPI == null ? UNKNOWN : attributeFromAPI.type.toString());
                     attribute.put("Model Name", propEntry.getValue().getName());
+                    if (propEntry.getValue().getInheritedFrom() != null) {
+                        attribute.put("Inherited From", Map.of("$ref", "#/" + propEntry.getValue().getInheritedFrom()));
+                    }
                     attributes.put(
                             attributeFromAPI == null ? propEntry.getValue().getName() + "*" : attributeFromAPI.name,
                             attribute);
