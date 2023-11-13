@@ -100,9 +100,16 @@ public class UsdmParser {
                 NodeList inheritanceResult = (NodeList) inheritanceExpr.evaluate(this.document, XPathConstants.NODESET);
                 for (int j = 0; j < inheritanceResult.getLength(); j++) {
                     setProperties(xPath, properties, inheritanceResult.item(j).getNodeValue(), className);
+                    elements.get(className).getSuperClasses()
+                            .add(getClassNameFromId(xPath, inheritanceResult.item(j).getNodeValue()));
                 }
                 setProperties(xPath, properties, classxmlId, className);
                 populateLinks(xPath, elements, classxmlId, className);
+            }
+            for (Map.Entry<String, ModelClass> entry : elements.entrySet()) {
+                for (String superClass : entry.getValue().getSuperClasses()) {
+                    elements.get(superClass).getSubClasses().add(entry.getKey());
+                }
             }
         } else {
             logger.warn(String.format("%1$s: No elements found", document.getDocumentURI()));

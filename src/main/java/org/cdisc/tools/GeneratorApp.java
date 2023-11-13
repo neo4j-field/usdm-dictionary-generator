@@ -22,11 +22,13 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * USDM Dictionary/Release Delta File Generator App
@@ -181,10 +183,12 @@ public class GeneratorApp {
         }
     }
 
-    private static void putIfNonEmpty(Map<String, Object> attribute, String name, String value) {
-        if (value != null && !value.equals("")) {
-            attribute.put(name, value);
+    private static void putIfNonEmpty(Map<String, Object> attribute, String name, Object value) {
+        if (value == null || (value instanceof String && value.equals(""))
+                || (value instanceof Collection && ((Collection<?>) value).isEmpty())) {
+            return;
         }
+        attribute.put(name, value);
     }
 
     private static Relationship getRelatedAttribute(Map.Entry<String, ModelClassProperty> propEntry,
@@ -259,6 +263,12 @@ public class GeneratorApp {
                 putIfNonEmpty(clazz, "NCI C-Code", entry.getValue().getDefNciCode());
                 putIfNonEmpty(clazz, "Preferred Term", entry.getValue().getPreferredTerm());
                 putIfNonEmpty(clazz, "Definition", entry.getValue().getDefinition());
+                putIfNonEmpty(clazz, "Super Classes",
+                        entry.getValue().getSuperClasses().stream().map((value) -> Map.of("$ref", "#/" + value))
+                                .collect(Collectors.toList()));
+                putIfNonEmpty(clazz, "Sub Classes",
+                        entry.getValue().getSubClasses().stream().map((value) -> Map.of("$ref", "#/" + value))
+                                .collect(Collectors.toList()));
                 clazz.put("Attributes", attributes);
                 classes.put(entry.getValue().getName(), clazz);
                 for (Map.Entry<String, ModelClassProperty> propEntry : entry.getValue().getProperties().entrySet()) {
