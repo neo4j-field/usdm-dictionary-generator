@@ -100,6 +100,7 @@ public class UsdmParser {
                 NodeList inheritanceResult = (NodeList) inheritanceExpr.evaluate(this.document, XPathConstants.NODESET);
                 for (int j = 0; j < inheritanceResult.getLength(); j++) {
                     setProperties(xPath, properties, inheritanceResult.item(j).getNodeValue(), className);
+                    populateLinks(xPath, elements, inheritanceResult.item(j).getNodeValue(), className);
                     elements.get(className).getSuperClasses()
                             .add(getClassNameFromId(xPath, inheritanceResult.item(j).getNodeValue()));
                 }
@@ -151,6 +152,7 @@ public class UsdmParser {
     private void populateLinks(XPath xPath, Map<String, ModelClass> elements, String classxmlId, String className)
             throws XPathExpressionException {
         // ---- Populate links
+        String immediateClass = getClassNameFromId(xPath, classxmlId);
         // This gets all the connectors whenever this class is stated as source
         String linkStrExpr = String.format("//connectors/connector/source[@xmi:idref='%1$s']/..", classxmlId);
         XPathExpression linksExpr = xPath.compile(linkStrExpr);
@@ -164,7 +166,8 @@ public class UsdmParser {
                 String propName = linkPropRef.getNodeValue();
                 String propType = ((Element) ((Element) currentConnector.getElementsByTagName("target").item(0))
                         .getElementsByTagName("model").item(0)).getAttribute("name");
-                ModelClassProperty linkedProp = new ModelClassProperty(propName, propType, null, null, null);
+                ModelClassProperty linkedProp = new ModelClassProperty(propName, propType, null, null,
+                        className == immediateClass ? null : immediateClass);
                 elements.get(className).getProperties().put(propName, linkedProp);
                 Node multiplicityRef = currentConnector.getChildNodes().item(3)
                         .getChildNodes().item(5).getAttributes().getNamedItem("multiplicity");
