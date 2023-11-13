@@ -249,7 +249,7 @@ public class GeneratorApp {
             for (Map.Entry<String, ModelClass> entry : allModelElements.entrySet()) {
                 Map<String, Object> attributes = new LinkedHashMap<>();
                 Map<String, Object> clazz = new LinkedHashMap<>();
-                Map<String, Map<String, String>> classFromAPI = new LinkedHashMap<>();
+                Map<String, Map<String, String>> classFromAPI = null;
                 List<String> classPaths = List.of("$.components.schemas." + entry.getValue().getName() + ".properties",
                         "$.components.schemas." + entry.getValue().getName() + "-Output.properties");
                 for (String classPath : classPaths) {
@@ -269,6 +269,7 @@ public class GeneratorApp {
                 putIfNonEmpty(clazz, "Sub Classes",
                         entry.getValue().getSubClasses().stream().map((value) -> Map.of("$ref", "#/" + value))
                                 .collect(Collectors.toList()));
+                clazz.put("Modifier", classFromAPI == null ? "Abstract" : "Concrete");
                 clazz.put("Attributes", attributes);
                 classes.put(entry.getValue().getName(), clazz);
                 for (Map.Entry<String, ModelClassProperty> propEntry : entry.getValue().getProperties().entrySet()) {
@@ -280,19 +281,25 @@ public class GeneratorApp {
                     putIfNonEmpty(attribute, "Definition", propEntry.getValue().getDefinition());
                     putIfNonEmpty(attribute, "Codelist Ref", propEntry.getValue().printCodeLists());
                     Relationship attributeFromAPI = getRelatedAttribute(propEntry, classFromAPI);
-                    attribute.put("Relationship Type",
-                            attributeFromAPI == null ? UNKNOWN : attributeFromAPI.type.toString());
+                    if (classFromAPI != null) {
+                        attribute.put("Relationship Type",
+                                attributeFromAPI == null ? UNKNOWN : attributeFromAPI.type.toString());
+                    }
                     attribute.put("Model Name", propEntry.getValue().getName());
                     if (propEntry.getValue().getInheritedFrom() != null) {
                         attribute.put("Inherited From", Map.of("$ref", "#/" + propEntry.getValue().getInheritedFrom()));
                     }
                     attributes.put(
-                            attributeFromAPI == null ? propEntry.getValue().getName() + "*" : attributeFromAPI.name,
+                            attributeFromAPI == null
+                                    ? propEntry.getValue().getName() + (classFromAPI == null ? "" : "*")
+                                    : attributeFromAPI.name,
                             attribute);
 
                 }
-                for (Map.Entry<String, Map<String, String>> propEntry : classFromAPI.entrySet()) {
-                    attributes.put(propEntry.getKey() + "*", UNKNOWN);
+                if (classFromAPI != null) {
+                    for (Map.Entry<String, Map<String, String>> propEntry : classFromAPI.entrySet()) {
+                        attributes.put(propEntry.getKey() + "*", UNKNOWN);
+                    }
                 }
             }
             logger.info("Finished processing files");
