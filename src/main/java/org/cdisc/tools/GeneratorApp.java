@@ -171,7 +171,7 @@ public class GeneratorApp {
 
     private static class Relationship {
         private enum RelType {
-            Value, Ref, RefList
+            Value, Ref
         }
 
         private RelType type;
@@ -184,29 +184,33 @@ public class GeneratorApp {
     }
 
     private static void putIfNonEmpty(Map<String, Object> attribute, String name, Object value) {
-        if (value == null || (value instanceof String && value.equals(""))
-                || (value instanceof Collection && ((Collection<?>) value).isEmpty())) {
+        putIfNonEmpty(attribute, name, value, value);
+    }
+
+    private static void putIfNonEmpty(Map<String, Object> attribute, String name, Object check, Object value) {
+        if (check == null || check.equals(false) || check.equals("")
+                || (check instanceof Collection && ((Collection<?>) check).isEmpty())) {
             return;
         }
         attribute.put(name, value);
     }
 
     private static Relationship getRelatedAttribute(Map.Entry<String, ModelClassProperty> propEntry,
-            Map<String, Map<String, String>> classFromAPI) {
+            Map<String, Map<String, ?>> classFromAPI) {
         if (classFromAPI != null) {
             List<Relationship> attributePaths = new ArrayList<>(
                     List.of(new Relationship(Relationship.RelType.Value, propEntry.getValue().getName()),
                             new Relationship(Relationship.RelType.Ref,
                                     propEntry.getValue().getName() + "Id"),
-                            new Relationship(Relationship.RelType.RefList,
+                            new Relationship(Relationship.RelType.Ref,
                                     propEntry.getValue().getName() + "Ids")));
             if (propEntry.getValue().getName().endsWith("s")) {
-                attributePaths.add(new Relationship(Relationship.RelType.RefList,
+                attributePaths.add(new Relationship(Relationship.RelType.Ref,
                         propEntry.getValue().getName().substring(0,
                                 propEntry.getValue().getName().length() - 1) + "Ids"));
             }
             if (propEntry.getValue().getName().endsWith("ies")) {
-                attributePaths.add(new Relationship(Relationship.RelType.RefList,
+                attributePaths.add(new Relationship(Relationship.RelType.Ref,
                         propEntry.getValue().getName().substring(0,
                                 propEntry.getValue().getName().length() - 3) + "yIds"));
             }
@@ -223,10 +227,40 @@ public class GeneratorApp {
         return null;
     }
 
+    static final String UNKNOWN = "UNKNOWN";
+
+    private static void buildNonModeledAttributes(Map<String, Map<String, ?>> classFromAPI, Object jsonDocument,
+            Map<String, Object> attributes) {
+        if (classFromAPI != null) {
+            for (Map.Entry<String, Map<String, ?>> propEntry : classFromAPI.entrySet()) {
+                Map<String, String> attribute = new LinkedHashMap<>();
+                attributes.put(propEntry.getKey(), attribute);
+                if (propEntry.getValue().get("type").equals("array")) {
+                    String ref = ((Map<String, String>) propEntry.getValue().get("items")).get("$ref");
+                    ref = ref.replaceFirst("\\#", "\\$");
+                    ref = ref.replaceAll("\\/", "\\.");
+                    try {
+                        Map<String, ?> def = JsonPath.read(jsonDocument, ref);
+                        attribute.put("$ref", "#/" + def.get("title"));
+                    } catch (PathNotFoundException e) {
+                        attribute.put("$ref", UNKNOWN);
+                    }
+                    attribute.put("Cardinality", "0..*");
+                } else if (propEntry.getValue().get("type").equals("string")) {
+                    attribute.put("$ref", "#/string");
+                    attribute.put("Cardinality", "0..1");
+                } else {
+                    attribute.put("$ref", UNKNOWN);
+                }
+                attribute.put("Relationship Type", "Value");
+            }
+        }
+    }
+
     private static void genStructure() throws IOException, ParserConfigurationException, SAXException,
             XPathExpressionException, OpenXML4JException, XmlException {
         // Generate the Markdown for the Data Dictionary Table
-        final String UNKNOWN = "UNKNOWN";
+
         try (
                 var currFile = GeneratorApp.class.getClassLoader()
                         .getResourceAsStream(CURR_RELEASE_FOLDER_NAME + XML_FILE_NAME);
@@ -249,7 +283,7 @@ public class GeneratorApp {
             for (Map.Entry<String, ModelClass> entry : allModelElements.entrySet()) {
                 Map<String, Object> attributes = new LinkedHashMap<>();
                 Map<String, Object> clazz = new LinkedHashMap<>();
-                Map<String, Map<String, String>> classFromAPI = null;
+                Map<String, Map<String, ?>> classFromAPI = null;
                 List<String> classPaths = List.of("$.components.schemas." + entry.getValue().getName() + ".properties",
                         "$.components.schemas." + entry.getValue().getName() + "-Output.properties");
                 for (String classPath : classPaths) {
@@ -281,26 +315,18 @@ public class GeneratorApp {
                     putIfNonEmpty(attribute, "Definition", propEntry.getValue().getDefinition());
                     putIfNonEmpty(attribute, "Codelist Ref", propEntry.getValue().printCodeLists());
                     Relationship attributeFromAPI = getRelatedAttribute(propEntry, classFromAPI);
-                    if (classFromAPI != null) {
-                        attribute.put("Relationship Type",
-                                attributeFromAPI == null ? UNKNOWN : attributeFromAPI.type.toString());
-                    }
+                    putIfNonEmpty(attribute, "Relationship Type", classFromAPI,
+                            attributeFromAPI == null ? UNKNOWN : attributeFromAPI.type.toString());
                     attribute.put("Model Name", propEntry.getValue().getName());
-                    if (propEntry.getValue().getInheritedFrom() != null) {
-                        attribute.put("Inherited From", Map.of("$ref", "#/" + propEntry.getValue().getInheritedFrom()));
-                    }
+                    putIfNonEmpty(attribute, "Inherited From", propEntry.getValue().getInheritedFrom(),
+                            Map.of("$ref", "#/" + propEntry.getValue().getInheritedFrom()));
                     attributes.put(
                             attributeFromAPI == null
                                     ? propEntry.getValue().getName() + (classFromAPI == null ? "" : "*")
                                     : attributeFromAPI.name,
                             attribute);
-
                 }
-                if (classFromAPI != null) {
-                    for (Map.Entry<String, Map<String, String>> propEntry : classFromAPI.entrySet()) {
-                        attributes.put(propEntry.getKey() + "*", UNKNOWN);
-                    }
-                }
+                buildNonModeledAttributes(classFromAPI, jsonDocument, attributes);
             }
             logger.info("Finished processing files");
             logger.info("Moving on to YAML Output");
