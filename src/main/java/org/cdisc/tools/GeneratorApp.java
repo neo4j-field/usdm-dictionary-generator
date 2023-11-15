@@ -237,13 +237,17 @@ public class GeneratorApp {
                 attributes.put(propEntry.getKey(), attribute);
                 if (propEntry.getValue().get("type").equals("array")) {
                     String ref = ((Map<String, String>) propEntry.getValue().get("items")).get("$ref");
-                    ref = ref.replaceFirst("\\#", "\\$");
-                    ref = ref.replaceAll("\\/", "\\.");
-                    try {
-                        Map<String, ?> def = JsonPath.read(jsonDocument, ref);
-                        attribute.put("$ref", "#/" + def.get("title"));
-                    } catch (PathNotFoundException e) {
+                    if (ref == null) {
                         attribute.put("$ref", UNKNOWN);
+                    } else {
+                        ref = ref.replaceFirst("\\#", "\\$");
+                        ref = ref.replaceAll("\\/", "\\.");
+                        try {
+                            Map<String, ?> def = JsonPath.read(jsonDocument, ref);
+                            attribute.put("$ref", "#/" + def.get("title"));
+                        } catch (PathNotFoundException e) {
+                            attribute.put("$ref", UNKNOWN);
+                        }
                     }
                     attribute.put("Cardinality", "0..*");
                 } else if (propEntry.getValue().get("type").equals("string")) {
