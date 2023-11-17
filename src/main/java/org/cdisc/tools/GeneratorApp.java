@@ -68,6 +68,8 @@ public class GeneratorApp {
             compareReleases();
         } else if (args[0].equals("--gen-structure")) {
             genStructure();
+        } else if (args[0].equals("--gen-alignment")) {
+            genAlignment();
         }
         logger.info("All done");
     }
@@ -266,12 +268,12 @@ public class GeneratorApp {
         // Generate the Markdown for the Data Dictionary Table
 
         try (
-                var currFile = GeneratorApp.class.getClassLoader()
+                var currUSDMFile = GeneratorApp.class.getClassLoader()
                         .getResourceAsStream(CURR_RELEASE_FOLDER_NAME + XML_FILE_NAME);
                 var currAPIFile = GeneratorApp.class.getClassLoader()
                         .getResourceAsStream(API_FILE_NAME);) {
             // Process the Main UML XMI Model first
-            UsdmParser usdmParser = new UsdmParser(currFile);
+            UsdmParser usdmParser = new UsdmParser(currUSDMFile);
             Object jsonDocument = Configuration.defaultConfiguration().jsonProvider()
                     .parse(new String(currAPIFile.readAllBytes()));
             // allModelElements contains a deserialized representation of the UML
@@ -340,6 +342,30 @@ public class GeneratorApp {
             Yaml yaml = new Yaml(dumperOptions);
             FileWriter writer = new FileWriter("dataStructure.yml");
             yaml.dump(classes, writer);
+        }
+    }
+
+    private static void genAlignment() throws IOException, ParserConfigurationException, SAXException,
+            XPathExpressionException, OpenXML4JException, XmlException {
+        // Compare Classes and Attributes from API, CT, and USDM
+        try (
+                var currUSDMFile = GeneratorApp.class.getClassLoader()
+                        .getResourceAsStream(CURR_RELEASE_FOLDER_NAME + XML_FILE_NAME);) {
+            APIParser apiParser = new APIParser(API_FILE_NAME);
+            Map<String, ModelClass> apiElements = apiParser.getEntitiesMap();
+            System.out.println(apiElements);
+            // Process the Main UML XMI Model first
+            UsdmParser usdmParser = new UsdmParser(currUSDMFile);
+            // allModelElements contains a deserialized representation of the UML
+            Map<String, ModelClass> allModelElements = new TreeMap<>();
+            usdmParser.loadFromUsdmXmi(allModelElements);
+            if (allModelElements.isEmpty()) {
+                throw new RuntimeException("Possible Usdm XMI Parsing Error. Check file and structure");
+            }
+            // Next, add more detailed information from the CT Spreadsheet
+            CptParser cptParser = new CptParser(CPT_FILE_NAME);
+            Map<String, ModelClass> cptElements = cptParser.getEntitiesMap();
+
         }
     }
 }
