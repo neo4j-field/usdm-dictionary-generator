@@ -235,7 +235,7 @@ public class GeneratorApp {
             for (Map.Entry<String, Map<String, ?>> propEntry : classFromAPI.entrySet()) {
                 Map<String, String> attribute = new LinkedHashMap<>();
                 attributes.put(propEntry.getKey(), attribute);
-                if (propEntry.getValue().get("type").equals("array")) {
+                if (propEntry.getValue().containsKey("type") && propEntry.getValue().get("type").equals("array")) {
                     String ref = ((Map<String, String>) propEntry.getValue().get("items")).get("$ref");
                     if (ref == null) {
                         attribute.put("$ref", UNKNOWN);
@@ -250,7 +250,8 @@ public class GeneratorApp {
                         }
                     }
                     attribute.put("Cardinality", "0..*");
-                } else if (propEntry.getValue().get("type").equals("string")) {
+                } else if (propEntry.getValue().containsKey("type")
+                        && propEntry.getValue().get("type").equals("string")) {
                     attribute.put("$ref", "#/string");
                     attribute.put("Cardinality", "0..1");
                 } else {
