@@ -93,7 +93,7 @@ public class CptParser {
                                 modelClass.setDefinition(record.get(7));
                             modelClass.setPreferredTerm(record.get(5));
                             modelClass.setDefNciCode(record.get(4));
-                        } else if (elementType.equals("Relationship") || elementType.equals("Attribute")) {
+                        } else if (elementType.equals("Relationship") || elementType.startsWith("Attribute")) {
                             ModelClassProperty property = modelElements.get(record.get(1)).getProperties()
                                     .get(record.get(3));
                             if (property != null) {
@@ -143,7 +143,7 @@ public class CptParser {
                             modelClass.setDefinition(record.get(7));
                         modelClass.setPreferredTerm(record.get(5));
                         modelClass.setDefNciCode(record.get(4));
-                    } else if (elementType.equals("Relationship") || elementType.equals("Attribute")) {
+                    } else if (elementType.equals("Relationship") || elementType.startsWith("Attribute")) {
                         String propertyName = record.get(3);
                         ModelClassProperty property = new ModelClassProperty(propertyName, null, null, null, null);
                         elements.get(className).getProperties().put(propertyName, property);

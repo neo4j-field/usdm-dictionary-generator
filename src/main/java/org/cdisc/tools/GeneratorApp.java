@@ -25,9 +25,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -197,31 +200,47 @@ public class GeneratorApp {
         attribute.put(name, value);
     }
 
+    private static Set<String> toIds(String name) {
+        Set<String> synonyms = new LinkedHashSet<>();
+        synonyms.add(name);
+        synonyms.add(name + "Id");
+        synonyms.add(name + "Ids");
+        if (name.endsWith("s")) {
+            synonyms.add(name.substring(0, name.length() - "s".length()) + "Ids");
+        }
+        if (name.endsWith("ies")) {
+            synonyms.add(name.substring(0, name.length() - "ies".length()) + "yIds");
+        }
+        return synonyms;
+    }
+
+    private static Set<String> fromIds(String name) {
+        Set<String> synonyms = new LinkedHashSet<>();
+        synonyms.add(name);
+        if (name.endsWith("Id")) {
+            synonyms.add(name.substring(0, name.length() - "Id".length()));
+        }
+        if (name.endsWith("yIds")) {
+            synonyms.add(name.substring(0, name.length() - "yIds".length()) + "ies");
+        }
+        if (name.endsWith("Ids")) {
+            synonyms.add(name.substring(0, name.length() - "Ids".length()) + "s");
+            synonyms.add(name.substring(0, name.length() - "Ids".length()));
+        }
+        return synonyms;
+    }
+
     private static Relationship getRelatedAttribute(Map.Entry<String, ModelClassProperty> propEntry,
             Map<String, Map<String, ?>> classFromAPI) {
         if (classFromAPI != null) {
-            List<Relationship> attributePaths = new ArrayList<>(
-                    List.of(new Relationship(Relationship.RelType.Value, propEntry.getValue().getName()),
-                            new Relationship(Relationship.RelType.Ref,
-                                    propEntry.getValue().getName() + "Id"),
-                            new Relationship(Relationship.RelType.Ref,
-                                    propEntry.getValue().getName() + "Ids")));
-            if (propEntry.getValue().getName().endsWith("s")) {
-                attributePaths.add(new Relationship(Relationship.RelType.Ref,
-                        propEntry.getValue().getName().substring(0,
-                                propEntry.getValue().getName().length() - 1) + "Ids"));
-            }
-            if (propEntry.getValue().getName().endsWith("ies")) {
-                attributePaths.add(new Relationship(Relationship.RelType.Ref,
-                        propEntry.getValue().getName().substring(0,
-                                propEntry.getValue().getName().length() - 3) + "yIds"));
-            }
-            for (Relationship attributePath : attributePaths) {
+            Set<String> synonyms = toIds(propEntry.getValue().getName());
+            for (String synonym : synonyms) {
                 try {
                     JsonPath.read(classFromAPI,
-                            attributePath.name);
-                    classFromAPI.remove(attributePath.name);
-                    return attributePath;
+                            synonym);
+                    classFromAPI.remove(synonym);
+                    return new Relationship(propEntry.getValue().getName().equals(synonym) ? Relationship.RelType.Value
+                            : Relationship.RelType.Ref, synonym);
                 } catch (PathNotFoundException e) {
                 }
             }
@@ -346,6 +365,37 @@ public class GeneratorApp {
         }
     }
 
+    private static Set<String> uniqueKeys(Map<String, ?>... maps) {
+        Set<String> uniqueKeys = new TreeSet<>();
+        for (Map<String, ?> map : maps) {
+            uniqueKeys.addAll(map.keySet());
+        }
+        return uniqueKeys;
+    }
+
+    public enum ColumnName {
+        CLASS("Class"),
+        ATTRIBUTE("Attribute"),
+        API("API"),
+        CT("CT"),
+        UML_DD("\"UML / DD\""),
+        COMMENT("Comment");
+
+        public final String label;
+
+        private ColumnName(String label) {
+            this.label = label;
+        }
+
+        static List<String> labels() {
+            List<String> labels = new ArrayList<>();
+            for (ColumnName columnName : ColumnName.values()) {
+                labels.add(columnName.label);
+            }
+            return labels;
+        }
+    }
+
     private static void genAlignment() throws IOException, ParserConfigurationException, SAXException,
             XPathExpressionException, OpenXML4JException, XmlException {
         // Compare Classes and Attributes from API, CT, and USDM
@@ -354,19 +404,74 @@ public class GeneratorApp {
                         .getResourceAsStream(CURR_RELEASE_FOLDER_NAME + XML_FILE_NAME);) {
             APIParser apiParser = new APIParser(API_FILE_NAME);
             Map<String, ModelClass> apiElements = apiParser.getEntitiesMap();
-            System.out.println(apiElements);
-            // Process the Main UML XMI Model first
             UsdmParser usdmParser = new UsdmParser(currUSDMFile);
-            // allModelElements contains a deserialized representation of the UML
-            Map<String, ModelClass> allModelElements = new TreeMap<>();
-            usdmParser.loadFromUsdmXmi(allModelElements);
-            if (allModelElements.isEmpty()) {
+            Map<String, ModelClass> modelElements = new TreeMap<>();
+            usdmParser.loadFromUsdmXmi(modelElements);
+            if (modelElements.isEmpty()) {
                 throw new RuntimeException("Possible Usdm XMI Parsing Error. Check file and structure");
             }
-            // Next, add more detailed information from the CT Spreadsheet
             CptParser cptParser = new CptParser(CPT_FILE_NAME);
             Map<String, ModelClass> cptElements = cptParser.getEntitiesMap();
-
+            List<Map<String, Object>> records = new ArrayList<>();
+            for (String uniqueClass : uniqueKeys(apiElements, modelElements, cptElements)) {
+                if (!apiElements.containsKey(uniqueClass) || !modelElements.containsKey(uniqueClass)
+                        || !cptElements.containsKey(uniqueClass)) {
+                    Map<String, Object> record = new LinkedHashMap<>();
+                    record.put(ColumnName.CLASS.label, uniqueClass);
+                    putIfNonEmpty(record, ColumnName.API.label,
+                            apiElements.containsKey(uniqueClass) ? uniqueClass : null);
+                    putIfNonEmpty(record, ColumnName.CT.label,
+                            cptElements.containsKey(uniqueClass) ? uniqueClass : null);
+                    putIfNonEmpty(record, ColumnName.UML_DD.label,
+                            modelElements.containsKey(uniqueClass) ? uniqueClass : null);
+                    records.add(record);
+                } else {
+                    Map<String, Map<String, Object>> allProperties = new TreeMap<>();
+                    Map<String, ModelClassProperty> apiProperties = apiElements.get(uniqueClass).getProperties();
+                    Map<String, ModelClassProperty> modelProperties = modelElements.get(uniqueClass).getProperties();
+                    Map<String, ModelClassProperty> cptProperties = cptElements.get(uniqueClass).getProperties();
+                    for (String uniqueAttribute : modelProperties.keySet()) {
+                        Map<String, Object> record = new HashMap<>();
+                        record.put(ColumnName.CLASS.label, uniqueClass);
+                        record.put(ColumnName.ATTRIBUTE.label, uniqueAttribute);
+                        record.put(ColumnName.UML_DD.label, uniqueAttribute);
+                        allProperties.put(uniqueAttribute, record);
+                    }
+                    for (String uniqueAttribute : cptProperties.keySet()) {
+                        Map<String, Object> record = new HashMap<>();
+                        record.put(ColumnName.CLASS.label, uniqueClass);
+                        record.put(ColumnName.ATTRIBUTE.label, uniqueAttribute);
+                        record = allProperties.getOrDefault(uniqueAttribute, record);
+                        record.put(ColumnName.CT.label, uniqueAttribute);
+                        allProperties.putIfAbsent(uniqueAttribute, record);
+                    }
+                    for (String uniqueAttribute : apiProperties.keySet()) {
+                        Map<String, Object> record = new HashMap<>();
+                        record.put(ColumnName.CLASS.label, uniqueClass);
+                        record.put(ColumnName.ATTRIBUTE.label, uniqueAttribute);
+                        String foundKey = uniqueAttribute;
+                        for (String potential : fromIds(uniqueAttribute)) {
+                            if (allProperties.containsKey(potential)) {
+                                foundKey = potential;
+                                break;
+                            }
+                        }
+                        record = allProperties.getOrDefault(foundKey, record);
+                        record.put(ColumnName.API.label, uniqueAttribute);
+                        allProperties.putIfAbsent(foundKey, record);
+                    }
+                    for (Map.Entry<String, Map<String, Object>> record : allProperties.entrySet()) {
+                        if (!record.getValue().containsKey(ColumnName.API.label)
+                                || (!record.getValue().containsKey(ColumnName.UML_DD.label)
+                                        && !Set.of("instanceType").contains(record.getKey()))
+                                || (!record.getValue().containsKey(ColumnName.CT.label)
+                                        && !Set.of("id", "instanceType").contains(record.getKey()))) {
+                            records.add(record.getValue());
+                        }
+                    }
+                }
+            }
+            Utils.printListOfMaps(ColumnName.labels(), records, "alignment.csv");
         }
     }
 }
