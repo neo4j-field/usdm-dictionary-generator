@@ -33,6 +33,14 @@
       "mainClass": "org.cdisc.tools.GeneratorApp",
       "projectName": "usdm-dictionary-generator",
       "args": "--gen-structure"
+    },
+    {
+      "type": "java",
+      "name": "Gen Alignment",
+      "request": "launch",
+      "mainClass": "org.cdisc.tools.GeneratorApp",
+      "projectName": "usdm-dictionary-generator",
+      "args": "--gen-alignment"
     }
   ]
 }
