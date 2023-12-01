@@ -6,10 +6,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
+
+import lombok.Getter;
 
 public class APIParser {
     private String inputFileName;
@@ -29,14 +32,17 @@ public class APIParser {
             // final String root = "$.components.schemas.Study-Output";
             final String root = "#/components/schemas/Study-Output";
             Map<String, ModelClass> elements = new TreeMap<>();
-            TypeDefinition rootType = getType(jsonDocument, Map.of("$ref", root));
-            buildEntitiesMap(jsonDocument, elements, rootType);
+            List<TypeDefinition> rootTypes = new ArrayList<>();
+            getTypes(rootTypes, jsonDocument, Map.of("$ref", root));
+            buildEntitiesMap(jsonDocument, elements, rootTypes.get(0));
             return elements;
         }
     }
 
     private static class TypeDefinition {
+        @Getter
         private String type;
+        @Getter
         private Map<String, ?> definition;
 
         private TypeDefinition(String type, Map<String, ?> definition) {
@@ -60,19 +66,22 @@ public class APIParser {
         return new TypeDefinition((String) definition.get("title"), definition);
     }
 
-    private TypeDefinition getType(Object jsonDocument, Map<String, ?> property) {
+    private void getTypes(List<TypeDefinition> types, Object jsonDocument, Map<String, ?> property) {
+
         if (property.containsKey("type")) {
             String propertyJSONType = (String) property.get("type");
             if (propertyJSONType.equals("array")) {
-                return getType(jsonDocument, (Map<String, ?>) property.get("items"));
-                // TODO: items might contain anyOf (ScheduleTimeline-Output.instances)
+                getTypes(types, jsonDocument, (Map<String, ?>) property.get("items"));
             } else {
-                return new TypeDefinition(propertyJSONType);
+                types.add(new TypeDefinition(propertyJSONType));
+            }
+        } else if (property.containsKey("anyOf")) {
+            for (Map<String, String> typeObject : ((List<Map<String, String>>) property.get("anyOf"))) {
+                getTypes(types, jsonDocument, typeObject);
             }
         } else if (property.containsKey("$ref")) {
-            return classNameFromRef(jsonDocument, property);
+            types.add(classNameFromRef(jsonDocument, property));
         }
-        return null;
     }
 
     private void buildEntitiesMap(Object jsonDocument, Map<String, ModelClass> elements, TypeDefinition classPath) {
@@ -87,18 +96,12 @@ public class APIParser {
         for (Map.Entry<String, Map<String, ?>> propertyFromAPI : propertiesFromAPI.entrySet()) {
             String propertyName = propertyFromAPI.getKey();
             List<TypeDefinition> types = new ArrayList<>();
-            if (propertyFromAPI.getValue().containsKey("anyOf")) {
-                for (Map<String, String> typeObject : ((List<Map<String, String>>) propertyFromAPI
-                        .getValue().get("anyOf"))) {
-                    types.add(getType(jsonDocument, typeObject));
-                }
-            } else {
-                types.add(getType(jsonDocument, propertyFromAPI.getValue()));
-            }
-            if (types.get(0) == null) {
+            getTypes(types, jsonDocument, propertyFromAPI.getValue());
+            if (types.isEmpty()) {
                 return;
             }
-            ModelClassProperty property = new ModelClassProperty(propertyName, types.get(0).type,
+            ModelClassProperty property = new ModelClassProperty(propertyName,
+                    types.stream().map(TypeDefinition::getType).collect(Collectors.joining(", ")),
                     null, null, null);
             for (TypeDefinition type : types) {
                 if (type.definition != null) {
