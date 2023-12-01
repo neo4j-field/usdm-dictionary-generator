@@ -107,7 +107,8 @@ public class CptParser {
                                 modelClass.setDefinition(record.get(Column.DEFINITION.ordinal()));
                             modelClass.setPreferredTerm(record.get(Column.CT_ITEM_PREFERRED_NAME.ordinal()));
                             modelClass.setDefNciCode(record.get(Column.NCI_C_CODE.ordinal()));
-                        } else if (elementType.equals("Relationship") || elementType.equals("Attribute")) {
+                        } else if (elementType.equals("Relationship") || elementType.equals("Attribute")
+                                || elementType.equals("Complex Datatype Relationship")) {
                             ModelClassProperty property = modelElements
                                     .get(record.get(Column.ENTITY_NAME.ordinal())).getProperties()
                                     .get(record.get(Column.LOGICAL_DATA_MODEL_NAME.ordinal()));
@@ -161,7 +162,8 @@ public class CptParser {
                             modelClass.setDefinition(record.get(Column.DEFINITION.ordinal()));
                         modelClass.setPreferredTerm(record.get(Column.CT_ITEM_PREFERRED_NAME.ordinal()));
                         modelClass.setDefNciCode(record.get(Column.NCI_C_CODE.ordinal()));
-                    } else if (elementType.equals("Relationship") || elementType.equals("Attribute")) {
+                    } else if (elementType.equals("Relationship") || elementType.equals("Attribute")
+                            || elementType.equals("Complex Datatype Relationship")) {
                         String propertyName = record.get(Column.LOGICAL_DATA_MODEL_NAME.ordinal());
                         ModelClassProperty property = new ModelClassProperty(propertyName, null, null, null, null);
                         elements.get(className).getProperties().put(propertyName, property);
