@@ -37,6 +37,20 @@ public class CptParser {
     private String inputFileName;
     private String tmpCsvFileName;
 
+    private enum Column {
+        ROW_NUMBER,
+        ENTITY_NAME,
+        ROLE,
+        INHERITED_FROM,
+        LOGICAL_DATA_MODEL_NAME,
+        NCI_C_CODE,
+        CT_ITEM_PREFERRED_NAME,
+        SYNONYMS,
+        DEFINITION,
+        HAS_VALUE_LIST,
+        CODELIST_URL
+    }
+
     public CptParser(String inputFileName) throws OpenXML4JException, XmlException, IOException {
         this.inputFileName = inputFileName;
         try {
@@ -81,38 +95,42 @@ public class CptParser {
         try (reader;
                 CSVParser parser = new CSVParser(reader, CSVFormat.RFC4180.withSkipHeaderRecord().withDelimiter(','))) {
             for (final CSVRecord record : parser) {
-                if (record.size() >= 3) {
-                    String elementType = record.get(2);
+                if (record.size() > Column.ROLE.ordinal()) {
+                    String elementType = record.get(Column.ROLE.ordinal());
 
-                    ModelClass modelClass = modelElements.get(record.get(1));
+                    ModelClass modelClass = modelElements.get(record.get(Column.ENTITY_NAME.ordinal()));
                     // These null checks are necessary to cover inconsistencies between XMI and CT
                     // Spreadsheet
                     if (modelClass != null) {
                         if (elementType.equals("Entity")) {
-                            if (record.size() >= 8)
-                                modelClass.setDefinition(record.get(7));
-                            modelClass.setPreferredTerm(record.get(5));
-                            modelClass.setDefNciCode(record.get(4));
-                        } else if (elementType.equals("Relationship") || elementType.startsWith("Attribute")) {
-                            ModelClassProperty property = modelElements.get(record.get(1)).getProperties()
-                                    .get(record.get(3));
+                            if (record.size() > Column.DEFINITION.ordinal())
+                                modelClass.setDefinition(record.get(Column.DEFINITION.ordinal()));
+                            modelClass.setPreferredTerm(record.get(Column.CT_ITEM_PREFERRED_NAME.ordinal()));
+                            modelClass.setDefNciCode(record.get(Column.NCI_C_CODE.ordinal()));
+                        } else if (elementType.equals("Relationship") || elementType.equals("Attribute")) {
+                            ModelClassProperty property = modelElements
+                                    .get(record.get(Column.ENTITY_NAME.ordinal())).getProperties()
+                                    .get(record.get(Column.LOGICAL_DATA_MODEL_NAME.ordinal()));
                             if (property != null) {
-                                if (record.size() >= 8) {
+                                if (record.size() > Column.DEFINITION.ordinal()) {
                                     // Update Description and CodeList references
-                                    property.setDefinition(record.get(7));
-                                    property.setPreferredTerm(record.get(5));
-                                    property.setDefNciCode(record.get(4));
-                                    if (record.get(8).trim().toUpperCase().contains("Y")) {
-                                        String codeListRef = record.get(8).replace("Y", "").trim();
+                                    property.setDefinition(record.get(Column.DEFINITION.ordinal()));
+                                    property.setPreferredTerm(record.get(Column.CT_ITEM_PREFERRED_NAME.ordinal()));
+                                    property.setDefNciCode(record.get(Column.NCI_C_CODE.ordinal()));
+                                    if (record.get(Column.HAS_VALUE_LIST.ordinal()).trim().toUpperCase()
+                                            .contains("Y")) {
+                                        String codeListRef = record.get(Column.HAS_VALUE_LIST.ordinal())
+                                                .replace("Y", "").trim();
                                         property.setCodeListReference(List.of(codeListRef));
                                     }
                                 }
                             } else {
-                                logger.warn("Could not find Property: " + record.get(3));
+                                logger.warn("Could not find Property: "
+                                        + record.get(Column.LOGICAL_DATA_MODEL_NAME.ordinal()));
                             }
                         }
                     } else {
-                        logger.warn("Could not find Class: " + record.get(1));
+                        logger.warn("Could not find Class: " + record.get(Column.ENTITY_NAME.ordinal()));
                     }
                 }
                 logger.debug(record.toString());
@@ -131,29 +149,30 @@ public class CptParser {
         try (reader;
                 CSVParser parser = new CSVParser(reader, CSVFormat.RFC4180.withSkipHeaderRecord().withDelimiter(','))) {
             for (final CSVRecord record : parser) {
-                if (record.size() >= 3) {
+                if (record.size() > Column.ROLE.ordinal()) {
                     // These null checks are necessary to cover inconsistencies between XMI and CT
                     // Spreadsheet
-                    String className = record.get(1);
-                    String elementType = record.get(2);
+                    String className = record.get(Column.ENTITY_NAME.ordinal());
+                    String elementType = record.get(Column.ROLE.ordinal());
                     if (elementType.equals("Entity")) {
                         ModelClass modelClass = new ModelClass(className, new LinkedHashMap<>(), null);
                         elements.put(className, modelClass);
-                        if (record.size() >= 8)
-                            modelClass.setDefinition(record.get(7));
-                        modelClass.setPreferredTerm(record.get(5));
-                        modelClass.setDefNciCode(record.get(4));
-                    } else if (elementType.equals("Relationship") || elementType.startsWith("Attribute")) {
-                        String propertyName = record.get(3);
+                        if (record.size() > Column.DEFINITION.ordinal())
+                            modelClass.setDefinition(record.get(Column.DEFINITION.ordinal()));
+                        modelClass.setPreferredTerm(record.get(Column.CT_ITEM_PREFERRED_NAME.ordinal()));
+                        modelClass.setDefNciCode(record.get(Column.NCI_C_CODE.ordinal()));
+                    } else if (elementType.equals("Relationship") || elementType.equals("Attribute")) {
+                        String propertyName = record.get(Column.LOGICAL_DATA_MODEL_NAME.ordinal());
                         ModelClassProperty property = new ModelClassProperty(propertyName, null, null, null, null);
                         elements.get(className).getProperties().put(propertyName, property);
-                        if (record.size() >= 8) {
+                        if (record.size() > Column.DEFINITION.ordinal()) {
                             // Update Description and CodeList references
-                            property.setDefinition(record.get(7));
-                            property.setPreferredTerm(record.get(5));
-                            property.setDefNciCode(record.get(4));
-                            if (record.get(8).trim().toUpperCase().contains("Y")) {
-                                String codeListRef = record.get(8).replace("Y", "").trim();
+                            property.setDefinition(record.get(Column.DEFINITION.ordinal()));
+                            property.setPreferredTerm(record.get(Column.CT_ITEM_PREFERRED_NAME.ordinal()));
+                            property.setDefNciCode(record.get(Column.NCI_C_CODE.ordinal()));
+                            if (record.get(Column.HAS_VALUE_LIST.ordinal()).trim().toUpperCase().contains("Y")) {
+                                String codeListRef = record.get(Column.HAS_VALUE_LIST.ordinal()).replace("Y", "")
+                                        .trim();
                                 property.setCodeListReference(List.of(codeListRef));
                             }
                         }
