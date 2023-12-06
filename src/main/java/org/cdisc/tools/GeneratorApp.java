@@ -425,51 +425,57 @@ public class GeneratorApp {
                     putIfNonEmpty(record, ColumnName.UML_DD.label,
                             modelElements.containsKey(uniqueClass) ? uniqueClass : null);
                     records.add(record);
-                } else {
-                    Map<String, Map<String, Object>> allProperties = new TreeMap<>();
-                    Map<String, ModelClassProperty> apiProperties = apiElements.get(uniqueClass).getProperties();
-                    Map<String, ModelClassProperty> modelProperties = modelElements.get(uniqueClass).getProperties();
-                    Map<String, ModelClassProperty> cptProperties = cptElements.get(uniqueClass).getProperties();
-                    for (String uniqueAttribute : modelProperties.keySet()) {
-                        Map<String, Object> record = new HashMap<>();
-                        record.put(ColumnName.CLASS.label, uniqueClass);
-                        record.put(ColumnName.ATTRIBUTE.label, uniqueAttribute);
-                        record.put(ColumnName.UML_DD.label, uniqueAttribute);
-                        allProperties.put(uniqueAttribute, record);
-                    }
-                    for (String uniqueAttribute : cptProperties.keySet()) {
-                        Map<String, Object> record = new HashMap<>();
-                        record.put(ColumnName.CLASS.label, uniqueClass);
-                        record.put(ColumnName.ATTRIBUTE.label, uniqueAttribute);
-                        record = allProperties.getOrDefault(uniqueAttribute, record);
-                        record.put(ColumnName.CT.label, uniqueAttribute);
-                        allProperties.putIfAbsent(uniqueAttribute, record);
-                    }
-                    for (String uniqueAttribute : apiProperties.keySet()) {
-                        Map<String, Object> record = new HashMap<>();
-                        record.put(ColumnName.CLASS.label, uniqueClass);
-                        record.put(ColumnName.ATTRIBUTE.label, uniqueAttribute);
-                        String foundKey = uniqueAttribute;
-                        for (String potential : fromIds(uniqueAttribute)) {
-                            if (allProperties.containsKey(potential)) {
-                                foundKey = potential;
-                                break;
-                            }
+                }
+                Map<String, Map<String, Object>> allProperties = new TreeMap<>();
+                Map<String, ModelClassProperty> apiProperties = apiElements.containsKey(uniqueClass)
+                        ? apiElements.get(uniqueClass).getProperties()
+                        : new HashMap<>();
+                Map<String, ModelClassProperty> modelProperties = modelElements.containsKey(uniqueClass)
+                        ? modelElements.get(uniqueClass).getProperties()
+                        : new HashMap<>();
+                Map<String, ModelClassProperty> cptProperties = cptElements.containsKey(uniqueClass)
+                        ? cptElements.get(uniqueClass).getProperties()
+                        : new HashMap<>();
+                for (String uniqueAttribute : modelProperties.keySet()) {
+                    Map<String, Object> record = new HashMap<>();
+                    record.put(ColumnName.CLASS.label, uniqueClass);
+                    record.put(ColumnName.ATTRIBUTE.label, uniqueAttribute);
+                    record.put(ColumnName.UML_DD.label, uniqueAttribute);
+                    allProperties.put(uniqueAttribute, record);
+                }
+                for (String uniqueAttribute : cptProperties.keySet()) {
+                    Map<String, Object> record = new HashMap<>();
+                    record.put(ColumnName.CLASS.label, uniqueClass);
+                    record.put(ColumnName.ATTRIBUTE.label, uniqueAttribute);
+                    record = allProperties.getOrDefault(uniqueAttribute, record);
+                    record.put(ColumnName.CT.label, uniqueAttribute);
+                    allProperties.putIfAbsent(uniqueAttribute, record);
+                }
+                for (String uniqueAttribute : apiProperties.keySet()) {
+                    Map<String, Object> record = new HashMap<>();
+                    record.put(ColumnName.CLASS.label, uniqueClass);
+                    record.put(ColumnName.ATTRIBUTE.label, uniqueAttribute);
+                    String foundKey = uniqueAttribute;
+                    for (String potential : fromIds(uniqueAttribute)) {
+                        if (allProperties.containsKey(potential)) {
+                            foundKey = potential;
+                            break;
                         }
-                        record = allProperties.getOrDefault(foundKey, record);
-                        record.put(ColumnName.API.label, uniqueAttribute);
-                        allProperties.putIfAbsent(foundKey, record);
                     }
-                    for (Map.Entry<String, Map<String, Object>> record : allProperties.entrySet()) {
-                        if (!record.getValue().containsKey(ColumnName.API.label)
-                                || (!record.getValue().containsKey(ColumnName.UML_DD.label)
-                                        && !Set.of("instanceType").contains(record.getKey()))
-                                || (!record.getValue().containsKey(ColumnName.CT.label)
-                                        && !Set.of("id", "instanceType").contains(record.getKey()))) {
-                            records.add(record.getValue());
-                        }
+                    record = allProperties.getOrDefault(foundKey, record);
+                    record.put(ColumnName.API.label, uniqueAttribute);
+                    allProperties.putIfAbsent(foundKey, record);
+                }
+                for (Map.Entry<String, Map<String, Object>> record : allProperties.entrySet()) {
+                    if (!record.getValue().containsKey(ColumnName.API.label)
+                            || (!record.getValue().containsKey(ColumnName.UML_DD.label)
+                                    && !Set.of("instanceType").contains(record.getKey()))
+                            || (!record.getValue().containsKey(ColumnName.CT.label)
+                                    && !Set.of("id", "instanceType").contains(record.getKey()))) {
+                        records.add(record.getValue());
                     }
                 }
+
             }
             Utils.printListOfMaps(ColumnName.labels(), records, "alignment.csv");
         }
