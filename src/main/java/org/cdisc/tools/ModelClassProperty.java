@@ -24,7 +24,9 @@ public class ModelClassProperty extends Descriptor {
     public ModelClassProperty(String name, String type, List<String> codeListReference, String description,
             String inheritedFrom, String multiplicity) {
         super(name, description);
-        this.addType(type);
+        if (type != null) {
+            this.addType(type);
+        }
         this.codeListReference = codeListReference;
         this.inheritedFrom = inheritedFrom;
         this.multiplicity = multiplicity;
