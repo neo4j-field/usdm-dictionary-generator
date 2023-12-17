@@ -110,9 +110,9 @@ public class Utils {
                 for (Map.Entry<String, ModelClassProperty> propEntry : newModelClass.getProperties().entrySet()) {// Property
                                                                                                                   // Rows
                     tableBuilder.addRow(null, null, propEntry.getValue().getName(),
-                            propEntry.getValue().getType().replace("<", "\\<"));
+                            propEntry.getValue().printType());
                     printer.printRecord(null, null, propEntry.getValue().getName(),
-                            propEntry.getValue().getType());
+                            propEntry.getValue().printType());
                 }
             }
             for (ModelClass removedModelClass : removedModelClasses) {// Class Row
@@ -121,9 +121,9 @@ public class Utils {
                 for (Map.Entry<String, ModelClassProperty> propEntry : removedModelClass.getProperties().entrySet()) {// Property
                                                                                                                       // Rows
                     printer.printRecord(null, null, propEntry.getValue().getName(),
-                            propEntry.getValue().getType());
+                            propEntry.getValue().printType());
                     tableBuilder.addRow(null, null, propEntry.getValue().getName(),
-                            propEntry.getValue().getType().replace("<", "\\<"));
+                            propEntry.getValue().printType());
                 }
             }
             tableBuilder.addRow("", null);
@@ -132,16 +132,16 @@ public class Utils {
                 String key = e.getKey();
                 List<ModelClassProperty> value = e.getValue();
                 for (ModelClassProperty property : value) {
-                    printer.printRecord("Property - NEW", key, property.getName(), property.getType());
-                    tableBuilder.addRow("Property - NEW", key, property.getName(), property.getType());
+                    printer.printRecord("Property - NEW", key, property.getName(), property.printType());
+                    tableBuilder.addRow("Property - NEW", key, property.getName(), property.printType());
                 }
             }
             for (Map.Entry<String, List<ModelClassProperty>> entry : removedProps.entrySet()) {
                 String key = entry.getKey();
                 List<ModelClassProperty> prop = entry.getValue();
                 for (ModelClassProperty property : prop) {
-                    printer.printRecord("Property - DELETED", key, property.getName(), property.getType());
-                    tableBuilder.addRow("Property - DELETED", key, property.getName(), property.getType());
+                    printer.printRecord("Property - DELETED", key, property.getName(), property.printType());
+                    tableBuilder.addRow("Property - DELETED", key, property.getName(), property.printType());
                 }
             }
             printer.close(true);

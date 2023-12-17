@@ -144,7 +144,7 @@ public class UsdmParser {
                         .item(7).getAttributes().getNamedItem("type").getNodeValue();
                 logger.debug(String.format("Found propType %1$s for %2$s", propType, propName));
                 properties.put(propName, new ModelClassProperty(propName, propType, null, null,
-                        className == immediateClass ? null : immediateClass));
+                        className == immediateClass ? null : immediateClass, null));
             }
         }
     }
@@ -166,14 +166,17 @@ public class UsdmParser {
                 String propName = linkPropRef.getNodeValue();
                 String propType = ((Element) ((Element) currentConnector.getElementsByTagName("target").item(0))
                         .getElementsByTagName("model").item(0)).getAttribute("name");
-                ModelClassProperty linkedProp = new ModelClassProperty(propName, propType, null, null,
-                        className == immediateClass ? null : immediateClass);
-                elements.get(className).getProperties().put(propName, linkedProp);
                 Node multiplicityRef = currentConnector.getChildNodes().item(3)
                         .getChildNodes().item(5).getAttributes().getNamedItem("multiplicity");
-                if (multiplicityRef != null) {
-                    linkedProp.setMultiplicity(multiplicityRef.getNodeValue());
-                    logger.debug(multiplicityRef.getNodeValue());
+                if (elements.get(className).getProperties().containsKey(propName)) {
+                    ModelClassProperty linkedProp = elements.get(className).getProperties().get(propName);
+                    linkedProp.addType(propType);
+                    assert linkedProp.getMultiplicity().equals(multiplicityRef.getNodeValue());
+                } else {
+                    ModelClassProperty linkedProp = new ModelClassProperty(propName, propType, null, null,
+                            className == immediateClass ? null : immediateClass,
+                            multiplicityRef != null ? multiplicityRef.getNodeValue() : null);
+                    elements.get(className).getProperties().put(propName, linkedProp);
                 }
 
                 logger.debug(linkPropRef.getNodeValue());

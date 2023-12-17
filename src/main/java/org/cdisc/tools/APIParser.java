@@ -67,13 +67,17 @@ public class APIParser {
     }
 
     private void getTypes(List<TypeDefinition> types, Object jsonDocument, Map<String, ?> property) {
-
         if (property.containsKey("type")) {
             String propertyJSONType = (String) property.get("type");
             if (propertyJSONType.equals("array")) {
                 getTypes(types, jsonDocument, (Map<String, ?>) property.get("items"));
             } else {
                 types.add(new TypeDefinition(propertyJSONType));
+            }
+        } else if (property.containsKey("const")) {
+            Object propertyJSONValue = property.get("const");
+            if (propertyJSONValue instanceof String) {
+                types.add(new TypeDefinition("string"));
             }
         } else if (property.containsKey("anyOf")) {
             for (Map<String, String> typeObject : ((List<Map<String, String>>) property.get("anyOf"))) {
@@ -102,7 +106,7 @@ public class APIParser {
             }
             ModelClassProperty property = new ModelClassProperty(propertyName,
                     types.stream().map(TypeDefinition::getType).collect(Collectors.joining(", ")),
-                    null, null, null);
+                    null, null, null, null);
             for (TypeDefinition type : types) {
                 if (type.definition != null) {
                     buildEntitiesMap(jsonDocument, elements, type);

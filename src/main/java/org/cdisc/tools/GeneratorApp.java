@@ -122,7 +122,7 @@ public class GeneratorApp {
                                     .getOrDefault(propEntry.getValue().getName(), null);
                     }
                     tableBuilder.addRow(null, propEntry.getValue().getName(),
-                            propEntry.getValue().printType().replace("<", "\\<"),
+                            propEntry.getValue().printType(),
                             propEntry.getValue().getDefNciCode(), cardinality,
                             propEntry.getValue().getPreferredTerm(),
                             propEntry.getValue().getDefinition(), propEntry.getValue().printCodeLists(),
@@ -254,29 +254,35 @@ public class GeneratorApp {
             Map<String, Object> attributes) {
         if (classFromAPI != null) {
             for (Map.Entry<String, Map<String, ?>> propEntry : classFromAPI.entrySet()) {
-                Map<String, String> attribute = new LinkedHashMap<>();
+                Map<String, Object> attribute = new LinkedHashMap<>();
                 attributes.put(propEntry.getKey(), attribute);
                 if (propEntry.getValue().containsKey("type") && propEntry.getValue().get("type").equals("array")) {
                     String ref = ((Map<String, String>) propEntry.getValue().get("items")).get("$ref");
                     if (ref == null) {
-                        attribute.put("$ref", UNKNOWN);
+                        attribute.put("Type", new Map[] { Map.of("$ref", UNKNOWN) });
                     } else {
                         ref = ref.replaceFirst("\\#", "\\$");
                         ref = ref.replaceAll("\\/", "\\.");
                         try {
                             Map<String, ?> def = JsonPath.read(jsonDocument, ref);
-                            attribute.put("$ref", "#/" + def.get("title"));
+                            attribute.put("Type", new Map[] { Map.of("$ref", "#/" + def.get("title")) });
                         } catch (PathNotFoundException e) {
-                            attribute.put("$ref", UNKNOWN);
+                            attribute.put("Type", new Map[] { Map.of("$ref", UNKNOWN) });
                         }
                     }
                     attribute.put("Cardinality", "0..*");
                 } else if (propEntry.getValue().containsKey("type")
                         && propEntry.getValue().get("type").equals("string")) {
-                    attribute.put("$ref", "#/string");
+                    attribute.put("Type", new Map[] { Map.of("$ref", "#/string") });
                     attribute.put("Cardinality", "0..1");
+                } else if (propEntry.getValue().containsKey("const")) {
+                    Object propertyJSONValue = propEntry.getValue().get("const");
+                    if (propertyJSONValue instanceof String) {
+                        attribute.put("Type", new Map[] { Map.of("$ref", "#/string") });
+                        attribute.put("Cardinality", "0..1");
+                    }
                 } else {
-                    attribute.put("$ref", UNKNOWN);
+                    attribute.put("Type", new Map[] { Map.of("$ref", UNKNOWN) });
                 }
                 attribute.put("Relationship Type", "Value");
             }
@@ -334,7 +340,9 @@ public class GeneratorApp {
                 classes.put(entry.getValue().getName(), clazz);
                 for (Map.Entry<String, ModelClassProperty> propEntry : entry.getValue().getProperties().entrySet()) {
                     Map<String, Object> attribute = new LinkedHashMap<>();
-                    putIfNonEmpty(attribute, "$ref", "#/" + propEntry.getValue().printType().replace("<", "\\<"));
+                    putIfNonEmpty(attribute, "Type",
+                            propEntry.getValue().getTypes().stream().map((value) -> Map.of("$ref", "#/" + value))
+                                    .collect(Collectors.toList()));
                     putIfNonEmpty(attribute, "NCI C-Code", propEntry.getValue().getDefNciCode());
                     putIfNonEmpty(attribute, "Cardinality", propEntry.getValue().getMultiplicity());
                     putIfNonEmpty(attribute, "Preferred Term", propEntry.getValue().getPreferredTerm());

@@ -165,7 +165,8 @@ public class CptParser {
                     } else if (elementType.equals("Relationship") || elementType.equals("Attribute")
                             || elementType.equals("Complex Datatype Relationship")) {
                         String propertyName = record.get(Column.LOGICAL_DATA_MODEL_NAME.ordinal());
-                        ModelClassProperty property = new ModelClassProperty(propertyName, null, null, null, null);
+                        ModelClassProperty property = new ModelClassProperty(propertyName, null, null, null, null,
+                                null);
                         elements.get(className).getProperties().put(propertyName, property);
                         if (record.size() > Column.DEFINITION.ordinal()) {
                             // Update Description and CodeList references
