@@ -211,6 +211,9 @@ public class GeneratorApp {
         if (name.endsWith("ies")) {
             synonyms.add(name.substring(0, name.length() - "ies".length()) + "yIds");
         }
+        if (name.contains("children")){
+            synonyms.add(name.replace("children", "child") + "Ids");
+        }
         return synonyms;
     }
 
@@ -226,6 +229,9 @@ public class GeneratorApp {
         if (name.endsWith("Ids")) {
             synonyms.add(name.substring(0, name.length() - "Ids".length()) + "s");
             synonyms.add(name.substring(0, name.length() - "Ids".length()));
+        }
+        if (name.contains("child") && name.endsWith("Ids")){
+            synonyms.add(name.substring(0, name.length() - "Ids".length()).replace("child", "children"));
         }
         return synonyms;
     }
