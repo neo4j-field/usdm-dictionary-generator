@@ -214,6 +214,9 @@ public class GeneratorApp {
         if (name.contains("children")){
             synonyms.add(name.replace("children", "child") + "Ids");
         }
+        if (name.contains("criteria")){
+            synonyms.add(name.replace("criteria", "criterion") + "Ids");
+        }
         return synonyms;
     }
 
@@ -232,6 +235,9 @@ public class GeneratorApp {
         }
         if (name.contains("child") && name.endsWith("Ids")){
             synonyms.add(name.substring(0, name.length() - "Ids".length()).replace("child", "children"));
+        }
+        if (name.contains("criterion") && name.endsWith("Ids")){
+            synonyms.add(name.substring(0, name.length() - "Ids".length()).replace("criterion", "criteria"));
         }
         return synonyms;
     }
